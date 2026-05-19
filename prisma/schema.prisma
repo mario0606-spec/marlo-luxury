@@ -19,6 +19,13 @@ model User {
   image           String?
   role             UserRole  @default(CUSTOMER)
   stripeCustomerId String?   @unique
+  kycStatus        KycStatus @default(UNVERIFIED)
+  kycSubmittedAt   DateTime?
+  kycFullName      String?
+  kycDateOfBirth   DateTime?
+  kycDocumentType  String?
+  kycDocumentNumber String?
+  stripeVerificationSessionId String? @unique
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
 
@@ -116,9 +123,14 @@ model Rental {
   status          RentalStatus @default(PENDING)
   startDate       DateTime
   endDate         DateTime
-  totalAmount     Int          // in cents
-  depositAmount   Int          // in cents
+  totalAmount     Int          // in cents (rental cost only, excluding deposit)
+  depositAmount   Int          // in cents (tiered: 150/300/500 EUR)
   depositRefunded Boolean      @default(false)
+  depositIntentId String?      // Stripe PaymentIntent ID for deposit hold
+  depositCaptured Boolean      @default(false)
+  depositCaptureAmount Int?    // in cents, for partial capture on damage
+  waiverPurchased Boolean      @default(false)
+  waiverAmount    Int?         // in cents (e.g. 1900 = €19)
   shippingAddress Json?
   stripePaymentId String?
   notes           String?      @db.Text
@@ -127,11 +139,30 @@ model Rental {
 
   user            User         @relation(fields: [userId], references: [id])
   item            Item         @relation(fields: [itemId], references: [id])
+  conditionLogs   ConditionLog[]
 
   @@index([userId])
   @@index([itemId])
   @@index([status])
   @@index([startDate, endDate])
+}
+
+// ─── Condition Logs ─────────────────────────────────────────────────────────
+
+model ConditionLog {
+  id        String          @id @default(cuid())
+  rentalId  String
+  phase     ConditionPhase
+  photos    String[]        // base64 data URLs (JPEG, resized client-side)
+  status    ConditionStatus
+  notes     String?         @db.Text
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+
+  rental    Rental          @relation(fields: [rentalId], references: [id], onDelete: Cascade)
+
+  @@unique([rentalId, phase])
+  @@index([rentalId])
 }
 
 // ─── Subscriptions ──────────────────────────────────────────────────────────
@@ -239,6 +270,24 @@ enum OrderStatus {
 enum TokenType {
   EMAIL_VERIFICATION
   PASSWORD_RESET
+}
+
+enum KycStatus {
+  UNVERIFIED
+  PENDING
+  VERIFIED
+  REJECTED
+}
+
+enum ConditionPhase {
+  DISPATCH
+  RETURN
+}
+
+enum ConditionStatus {
+  PASS
+  DAMAGE_NOTED
+  FAIL
 }
 
 // ─── Marketing ──────────────────────────────────────────────────────────────

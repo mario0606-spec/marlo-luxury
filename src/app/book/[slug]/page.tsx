@@ -25,27 +25,34 @@ export default async function BookPage({ params }: PageProps) {
     redirect(`/auth/signin?callbackUrl=/book/${slug}`);
   }
 
-  const item = await prisma.item.findUnique({
-    where: { slug },
-    select: {
-      id: true,
-      name: true,
-      brand: true,
-      slug: true,
-      images: true,
-      dailyRate: true,
-      weeklyRate: true,
-      monthlyRate: true,
-      depositAmount: true,
-      available: true,
-      referenceNumber: true,
-      rentals: {
-        where: { status: { in: ["PENDING", "CONFIRMED", "ACTIVE"] } },
-        select: { startDate: true, endDate: true },
-        orderBy: { startDate: "asc" },
+  const [item, user] = await Promise.all([
+    prisma.item.findUnique({
+      where: { slug },
+      select: {
+        id: true,
+        name: true,
+        brand: true,
+        slug: true,
+        images: true,
+        dailyRate: true,
+        weeklyRate: true,
+        monthlyRate: true,
+        depositAmount: true,
+        retailPrice: true,
+        available: true,
+        referenceNumber: true,
+        rentals: {
+          where: { status: { in: ["PENDING", "CONFIRMED", "ACTIVE"] } },
+          select: { startDate: true, endDate: true },
+          orderBy: { startDate: "asc" },
+        },
       },
-    },
-  });
+    }),
+    prisma.user.findUnique({
+      where: { id: userId },
+      select: { kycStatus: true },
+    }),
+  ]);
 
   if (!item) notFound();
 
@@ -60,5 +67,11 @@ export default async function BookPage({ params }: PageProps) {
 
   const { rentals: _removed, ...itemData } = item;
 
-  return <BookingForm item={itemData} bookedRanges={bookedRanges} />;
+  return (
+    <BookingForm
+      item={itemData}
+      bookedRanges={bookedRanges}
+      kycStatus={user?.kycStatus ?? "UNVERIFIED"}
+    />
+  );
 }

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
-import { stripe } from "@/lib/stripe";
+import { stripe, createDepositHold } from "@/lib/stripe";
 import { prisma } from "@/lib/prisma";
 import { SubscriptionPlan } from "@prisma/client";
 
@@ -49,6 +49,14 @@ export async function POST(req: NextRequest) {
       case "customer.subscription.updated":
         await handleSubscriptionUpdated(event.data.object as Stripe.Subscription);
         break;
+
+      case "identity.verification_session.verified":
+        await handleIdentityVerified(event.data.object as Stripe.Identity.VerificationSession);
+        break;
+
+      case "identity.verification_session.requires_input":
+        await handleIdentityRequiresInput(event.data.object as Stripe.Identity.VerificationSession);
+        break;
     }
   } catch (err) {
     console.error(`Error handling Stripe event ${event.type}:`, err);
@@ -75,6 +83,12 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
     });
 
     console.log(`Rental ${rentalId} confirmed via checkout session ${session.id}`);
+
+    // Create deposit hold if waiver was NOT purchased
+    if (paymentIntentId) {
+      await createDepositHoldForRental(rentalId, paymentIntentId, session);
+    }
+
     return;
   }
 
@@ -88,7 +102,6 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
 
     if (!userId || !plan || !stripeSubscriptionId) return;
 
-    // Use billing_cycle_anchor as a stand-in for period start; period end is 1 month out
     const now = new Date();
     const nextMonth = new Date(now);
     nextMonth.setMonth(nextMonth.getMonth() + 1);
@@ -114,6 +127,55 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   }
 }
 
+async function createDepositHoldForRental(
+  rentalId: string,
+  paymentIntentId: string,
+  session: Stripe.Checkout.Session
+): Promise<void> {
+  const rental = await prisma.rental.findUnique({
+    where: { id: rentalId },
+    select: { waiverPurchased: true, depositAmount: true, depositIntentId: true },
+  });
+
+  if (!rental || rental.waiverPurchased || rental.depositIntentId) {
+    return; // waiver purchased, or deposit already set up
+  }
+
+  const customerId = typeof session.customer === "string" ? session.customer : null;
+  if (!customerId) {
+    console.error(`No customer ID for checkout session ${session.id} — cannot create deposit hold`);
+    return;
+  }
+
+  // Get the payment method from the payment intent (saved via setup_future_usage)
+  const pi = await stripe.paymentIntents.retrieve(paymentIntentId);
+  const paymentMethodId = typeof pi.payment_method === "string" ? pi.payment_method : null;
+
+  if (!paymentMethodId) {
+    console.error(`No saved payment method on PaymentIntent ${paymentIntentId} — cannot create deposit hold`);
+    return;
+  }
+
+  try {
+    const depositIntentId = await createDepositHold(
+      customerId,
+      paymentMethodId,
+      rental.depositAmount,
+      rentalId
+    );
+
+    await prisma.rental.update({
+      where: { id: rentalId },
+      data: { depositIntentId },
+    });
+
+    console.log(`Deposit hold ${depositIntentId} created for rental ${rentalId}`);
+  } catch (err) {
+    // Non-fatal: rental is confirmed, deposit hold failed. Log for admin follow-up.
+    console.error(`Failed to create deposit hold for rental ${rentalId}:`, err);
+  }
+}
+
 async function handleCheckoutExpired(session: Stripe.Checkout.Session) {
   const rentalId = session.metadata?.rentalId;
   if (!rentalId) return;
@@ -125,7 +187,22 @@ async function handleCheckoutExpired(session: Stripe.Checkout.Session) {
 }
 
 async function handlePaymentIntentSucceeded(pi: Stripe.PaymentIntent) {
-  // Handles direct Payment Intent usage (Checkout-originated PIs are handled by checkout.session.completed)
+  // Deposit hold captured by admin — update rental
+  if (pi.metadata?.type === "deposit_hold") {
+    const rentalId = pi.metadata?.rentalId;
+    if (rentalId) {
+      await prisma.rental.updateMany({
+        where: { id: rentalId },
+        data: {
+          depositCaptured: true,
+          depositCaptureAmount: pi.amount_received,
+        },
+      });
+    }
+    return;
+  }
+
+  // Regular rental payment
   await prisma.rental.updateMany({
     where: { stripePaymentId: pi.id, status: "PENDING" },
     data: { status: "CONFIRMED" },
@@ -148,7 +225,6 @@ async function handlePaymentIntentFailed(pi: Stripe.PaymentIntent) {
 }
 
 async function handleInvoicePaymentSucceeded(invoice: Stripe.Invoice) {
-  // In Stripe v22, subscription ID is in invoice.parent.subscription_details.subscription
   const subscriptionId = (() => {
     const parent = invoice.parent as (Stripe.Invoice["parent"] & {
       subscription_details?: { subscription?: string | { id: string } };
@@ -160,7 +236,6 @@ async function handleInvoicePaymentSucceeded(invoice: Stripe.Invoice) {
 
   if (!subscriptionId) return;
 
-  // Update subscription status and period from invoice dates
   await prisma.subscription.updateMany({
     where: { stripeSubscriptionId: subscriptionId },
     data: {
@@ -197,4 +272,37 @@ async function handleSubscriptionUpdated(sub: Stripe.Subscription) {
       cancelAtPeriodEnd: sub.cancel_at_period_end,
     },
   });
+}
+
+async function handleIdentityVerified(verificationSession: Stripe.Identity.VerificationSession) {
+  const userId = verificationSession.metadata?.userId;
+  if (!userId) {
+    console.error(`No userId in identity verification session ${verificationSession.id}`);
+    return;
+  }
+
+  await prisma.user.update({
+    where: { id: userId },
+    data: {
+      kycStatus: "VERIFIED",
+      stripeVerificationSessionId: verificationSession.id,
+    },
+  });
+
+  console.log(`KYC verified for user ${userId} via session ${verificationSession.id}`);
+}
+
+async function handleIdentityRequiresInput(verificationSession: Stripe.Identity.VerificationSession) {
+  const userId = verificationSession.metadata?.userId;
+  if (!userId) return;
+
+  // Mark as rejected only if there was a previous failure (not just a pending state)
+  const lastError = verificationSession.last_error;
+  if (lastError) {
+    await prisma.user.update({
+      where: { id: userId },
+      data: { kycStatus: "REJECTED" },
+    });
+    console.log(`KYC rejected for user ${userId}: ${lastError.code}`);
+  }
 }

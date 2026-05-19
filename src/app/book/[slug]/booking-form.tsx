@@ -14,14 +14,18 @@ interface Item {
   dailyRate: number;
   weeklyRate: number | null;
   monthlyRate: number | null;
-  depositAmount: number;
+  retailPrice: number;
   referenceNumber: string | null;
 }
 
 interface BookingFormProps {
   item: Item;
   bookedRanges: { start: string; end: string }[];
+  kycStatus?: string;
 }
+
+const KYC_THRESHOLD_CENTS = 50000; // €500
+const WAIVER_AMOUNT_CENTS = 1900;  // €19
 
 function formatEur(cents: number) {
   return new Intl.NumberFormat("de-DE", {
@@ -29,6 +33,12 @@ function formatEur(cents: number) {
     currency: "EUR",
     minimumFractionDigits: 0,
   }).format(cents / 100);
+}
+
+function calcDepositAmount(retailPriceCents: number): number {
+  if (retailPriceCents < 150000) return 15000;
+  if (retailPriceCents <= 500000) return 30000;
+  return 50000;
 }
 
 function calcTotal(item: Item, days: number): number {
@@ -45,10 +55,6 @@ function calcTotal(item: Item, days: number): number {
   return days * item.dailyRate;
 }
 
-function isDateBooked(dateStr: string, ranges: { start: string; end: string }[]): boolean {
-  return ranges.some((r) => dateStr >= r.start && dateStr <= r.end);
-}
-
 const TODAY = new Date().toISOString().split("T")[0];
 
 export function BookingForm({ item, bookedRanges }: BookingFormProps) {
@@ -58,6 +64,11 @@ export function BookingForm({ item, bookedRanges }: BookingFormProps) {
   const [step, setStep] = useState<"dates" | "address" | "review">("dates");
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [waiverPurchased, setWaiverPurchased] = useState(false);
+
+  // KYC state
+  const [kycStatus, setKycStatus] = useState<"loading" | "UNVERIFIED" | "PENDING" | "VERIFIED" | "REJECTED">("loading");
+  const [kycInitiating, setKycInitiating] = useState(false);
 
   const [address, setAddress] = useState({
     fullName: "",
@@ -74,7 +85,15 @@ export function BookingForm({ item, bookedRanges }: BookingFormProps) {
     : 0;
 
   const rentalTotal = days > 0 ? calcTotal(item, days) : 0;
-  const grandTotal = rentalTotal + item.depositAmount;
+  const depositAmount = calcDepositAmount(item.retailPrice);
+  const needsKyc = rentalTotal >= KYC_THRESHOLD_CENTS;
+
+  useEffect(() => {
+    fetch("/api/kyc/status")
+      .then((r) => r.json())
+      .then((d) => setKycStatus(d.kycStatus ?? "UNVERIFIED"))
+      .catch(() => setKycStatus("UNVERIFIED"));
+  }, []);
 
   useEffect(() => {
     if (startDate && endDate && endDate <= startDate) {
@@ -123,17 +142,43 @@ export function BookingForm({ item, bookedRanges }: BookingFormProps) {
     setStep("review");
   }
 
+  async function handleStartKyc() {
+    setKycInitiating(true);
+    setError("");
+    try {
+      const res = await fetch("/api/kyc/initiate", { method: "POST" });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error ?? "Could not start verification. Please try again.");
+        return;
+      }
+      if (data.kycStatus === "VERIFIED") {
+        setKycStatus("VERIFIED");
+        return;
+      }
+      if (data.url) {
+        window.location.href = data.url;
+      }
+    } catch {
+      setError("Network error. Please try again.");
+    } finally {
+      setKycInitiating(false);
+    }
+  }
+
   async function handleSubmit() {
     setError("");
     setSubmitting(true);
     try {
-      const res = await fetch("/api/rentals", {
+      // Create the rental
+      const rentalRes = await fetch("/api/rentals", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           itemId: item.id,
           startDate,
           endDate,
+          waiverPurchased,
           shippingAddress: {
             fullName: address.fullName,
             addressLine1: address.addressLine1,
@@ -146,13 +191,31 @@ export function BookingForm({ item, bookedRanges }: BookingFormProps) {
         }),
       });
 
-      const data = await res.json();
-      if (!res.ok) {
-        setError(data.error ?? "Booking failed. Please try again.");
+      const rentalData = await rentalRes.json();
+
+      if (!rentalRes.ok) {
+        if (rentalData.kycRequired) {
+          setError("Identity verification is required for this rental.");
+          return;
+        }
+        setError(rentalData.error ?? "Booking failed. Please try again.");
         return;
       }
 
-      router.push(`/rentals/${data.rentalId}/confirmation`);
+      // Redirect to Stripe checkout
+      const checkoutRes = await fetch("/api/payments/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ rentalId: rentalData.rentalId }),
+      });
+
+      const checkoutData = await checkoutRes.json();
+      if (!checkoutRes.ok || !checkoutData.url) {
+        setError(checkoutData.error ?? "Could not start payment. Please try again.");
+        return;
+      }
+
+      router.push(checkoutData.url);
     } catch {
       setError("Network error. Please try again.");
     } finally {
@@ -160,8 +223,11 @@ export function BookingForm({ item, bookedRanges }: BookingFormProps) {
     }
   }
 
-  const stepLabels = ["Select Dates", "Delivery Address", "Confirm Booking"];
+  const stepLabels = ["Select Dates", "Delivery Address", "Confirm & Pay"];
   const stepIndex = step === "dates" ? 0 : step === "address" ? 1 : 2;
+
+  // KYC gate: show verification prompt if needed and not yet verified
+  const kycBlocked = needsKyc && kycStatus !== "VERIFIED" && kycStatus !== "loading";
 
   return (
     <div className="min-h-screen bg-stone-50">
@@ -197,7 +263,53 @@ export function BookingForm({ item, bookedRanges }: BookingFormProps) {
           ))}
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* KYC banner */}
+        {kycBlocked && (
+          <div className="mb-6 bg-white border border-amber-200 p-6">
+            <div className="flex items-start gap-4">
+              <div className="flex-shrink-0 w-10 h-10 border border-amber-300 flex items-center justify-center">
+                <svg className="w-5 h-5 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
+                </svg>
+              </div>
+              <div className="flex-1">
+                <h3 className="text-sm font-medium text-stone-900 mb-1 tracking-wider uppercase">Identity Verification Required</h3>
+                <p className="text-sm text-stone-500 mb-4">
+                  We verify your identity to keep our community safe and protect our high-value items.
+                  This is a one-time step — verified once, you never need to do it again.
+                </p>
+                {kycStatus === "PENDING" ? (
+                  <div className="text-sm text-amber-700 bg-amber-50 border border-amber-200 px-3 py-2 inline-block">
+                    Verification in progress — please check back shortly.
+                  </div>
+                ) : kycStatus === "REJECTED" ? (
+                  <div className="space-y-3">
+                    <div className="text-sm text-red-700 bg-red-50 border border-red-200 px-3 py-2">
+                      Verification failed. Please try again with a valid document.
+                    </div>
+                    <button
+                      onClick={handleStartKyc}
+                      disabled={kycInitiating}
+                      className="btn-primary"
+                    >
+                      {kycInitiating ? "Starting…" : "Try Again"}
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={handleStartKyc}
+                    disabled={kycInitiating}
+                    className="btn-primary"
+                  >
+                    {kycInitiating ? "Starting verification…" : "Verify My Identity"}
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        <div className={`grid grid-cols-1 lg:grid-cols-3 gap-8 ${kycBlocked ? "opacity-60 pointer-events-none" : ""}`}>
           {/* Main form area */}
           <div className="lg:col-span-2 space-y-6">
             {error && (
@@ -347,10 +459,10 @@ export function BookingForm({ item, bookedRanges }: BookingFormProps) {
               </div>
             )}
 
-            {/* Step 3: Review + Confirm */}
+            {/* Step 3: Review + Waiver + Confirm */}
             {step === "review" && (
               <div className="bg-white border border-stone-200 p-8">
-                <h2 className="text-xs tracking-widest uppercase text-stone-500 mb-6">Review & Confirm</h2>
+                <h2 className="text-xs tracking-widest uppercase text-stone-500 mb-6">Review & Pay</h2>
 
                 <div className="space-y-6">
                   <div>
@@ -384,10 +496,45 @@ export function BookingForm({ item, bookedRanges }: BookingFormProps) {
                     </button>
                   </div>
 
+                  {/* Damage Waiver Option */}
+                  <div className="border border-stone-200 p-5">
+                    <div className="flex items-start gap-4">
+                      <div className="flex-shrink-0 mt-0.5">
+                        <input
+                          id="waiver"
+                          type="checkbox"
+                          checked={waiverPurchased}
+                          onChange={(e) => setWaiverPurchased(e.target.checked)}
+                          className="w-4 h-4 border-stone-300 text-stone-900 focus:ring-stone-500"
+                        />
+                      </div>
+                      <div className="flex-1">
+                        <label htmlFor="waiver" className="cursor-pointer">
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="text-sm font-medium text-stone-900 tracking-wide">
+                              marianni Schutz — Damage Waiver
+                            </span>
+                            <span className="text-sm font-medium text-stone-900">{formatEur(WAIVER_AMOUNT_CENTS)}</span>
+                          </div>
+                          <p className="text-xs text-stone-500 leading-relaxed">
+                            Protect your rental for {formatEur(WAIVER_AMOUNT_CENTS)} — covers accidental damage up to €500.
+                            {" "}<strong className="text-stone-700">No deposit hold on your card.</strong>
+                          </p>
+                          {!waiverPurchased && (
+                            <p className="text-xs text-stone-400 mt-1">
+                              Without waiver: a refundable {formatEur(depositAmount)} deposit hold will be placed on your card.
+                            </p>
+                          )}
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+
                   <div className="border-t border-stone-100 pt-4 text-xs text-stone-400 leading-relaxed">
-                    By confirming, you agree to our rental terms. Payment is due within 24 hours to secure
-                    your booking. The refundable deposit will be returned within 5 business days after the item
-                    is returned in its original condition.
+                    By confirming, you agree to our rental terms. Payment is processed via Stripe.
+                    {waiverPurchased
+                      ? " The damage waiver covers accidental damage up to €500."
+                      : ` A ${formatEur(depositAmount)} deposit hold will be placed on your card and released within 5 business days after safe return.`}
                   </div>
                 </div>
 
@@ -400,7 +547,7 @@ export function BookingForm({ item, bookedRanges }: BookingFormProps) {
                     disabled={submitting}
                     className="btn-primary flex-1"
                   >
-                    {submitting ? "Confirming…" : "Confirm Booking"}
+                    {submitting ? "Redirecting to payment…" : "Proceed to Payment →"}
                   </button>
                 </div>
               </div>
@@ -444,14 +591,26 @@ export function BookingForm({ item, bookedRanges }: BookingFormProps) {
                       <span>Rental ({days}d)</span>
                       <span>{formatEur(rentalTotal)}</span>
                     </div>
-                    <div className="flex justify-between text-stone-500">
-                      <span>Refundable deposit</span>
-                      <span>{formatEur(item.depositAmount)}</span>
-                    </div>
+                    {waiverPurchased ? (
+                      <div className="flex justify-between text-stone-500">
+                        <span>Damage waiver</span>
+                        <span>{formatEur(WAIVER_AMOUNT_CENTS)}</span>
+                      </div>
+                    ) : (
+                      <div className="flex justify-between text-stone-500">
+                        <span>Deposit hold (refundable)</span>
+                        <span>{formatEur(depositAmount)}</span>
+                      </div>
+                    )}
                     <div className="flex justify-between font-medium text-stone-900 border-t border-stone-100 pt-2 mt-2">
-                      <span>Total due</span>
-                      <span>{formatEur(grandTotal)}</span>
+                      <span>Charged today</span>
+                      <span>{formatEur(rentalTotal + (waiverPurchased ? WAIVER_AMOUNT_CENTS : 0))}</span>
                     </div>
+                    {!waiverPurchased && (
+                      <div className="text-xs text-stone-400">
+                        + {formatEur(depositAmount)} hold (not charged)
+                      </div>
+                    )}
                   </>
                 )}
               </div>

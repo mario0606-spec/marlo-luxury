@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import type { Metadata } from "next";
+import type { ConditionStatus } from "@prisma/client";
 
 export const metadata: Metadata = { title: "Admin — Rentals" };
 
@@ -21,11 +22,18 @@ function formatEur(cents: number) {
   }).format(cents / 100);
 }
 
+const CONDITION_STATUS_STYLES: Record<ConditionStatus, string> = {
+  PASS: "text-green-700 bg-green-50 border-green-200",
+  DAMAGE_NOTED: "text-amber-700 bg-amber-50 border-amber-200",
+  FAIL: "text-red-700 bg-red-50 border-red-200",
+};
+
 export default async function AdminRentalsPage() {
   const rentals = await prisma.rental.findMany({
     include: {
       item: { select: { name: true, brand: true, slug: true } },
       user: { select: { email: true, name: true } },
+      conditionLogs: { select: { phase: true, status: true } },
     },
     orderBy: { createdAt: "desc" },
     take: 100,
@@ -60,6 +68,8 @@ export default async function AdminRentalsPage() {
                 <th className="text-left px-4 py-3 text-xs tracking-widest uppercase text-stone-500 font-normal">Period</th>
                 <th className="text-right px-4 py-3 text-xs tracking-widest uppercase text-stone-500 font-normal">Amount</th>
                 <th className="text-center px-4 py-3 text-xs tracking-widest uppercase text-stone-500 font-normal">Status</th>
+                <th className="text-center px-4 py-3 text-xs tracking-widest uppercase text-stone-500 font-normal">Condition</th>
+                <th className="px-4 py-3"></th>
               </tr>
             </thead>
             <tbody>
@@ -69,6 +79,8 @@ export default async function AdminRentalsPage() {
                   className: "text-stone-600 bg-stone-50 border-stone-200",
                 };
                 const shortRef = rental.id.slice(-8).toUpperCase();
+                const dispatchLog = rental.conditionLogs.find((l) => l.phase === "DISPATCH");
+                const returnLog = rental.conditionLogs.find((l) => l.phase === "RETURN");
                 return (
                   <tr key={rental.id} className="border-b border-stone-100 hover:bg-stone-50">
                     <td className="px-4 py-3 font-mono text-xs text-stone-500">MAR-{shortRef}</td>
@@ -94,6 +106,32 @@ export default async function AdminRentalsPage() {
                       <span className={`text-xs tracking-widest uppercase px-2 py-0.5 border ${status.className}`}>
                         {status.label}
                       </span>
+                    </td>
+                    <td className="px-4 py-3 text-center">
+                      <div className="flex flex-col gap-1 items-center">
+                        {dispatchLog ? (
+                          <span className={`text-xs px-1.5 py-0.5 border ${CONDITION_STATUS_STYLES[dispatchLog.status]}`}>
+                            D: {dispatchLog.status.replace("_", " ")}
+                          </span>
+                        ) : (
+                          <span className="text-xs text-stone-300">D: —</span>
+                        )}
+                        {returnLog ? (
+                          <span className={`text-xs px-1.5 py-0.5 border ${CONDITION_STATUS_STYLES[returnLog.status]}`}>
+                            R: {returnLog.status.replace("_", " ")}
+                          </span>
+                        ) : (
+                          <span className="text-xs text-stone-300">R: —</span>
+                        )}
+                      </div>
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      <Link
+                        href={`/admin/rentals/${rental.id}`}
+                        className="text-xs tracking-wider uppercase text-stone-500 hover:text-stone-900 underline underline-offset-2"
+                      >
+                        Detail
+                      </Link>
                     </td>
                   </tr>
                 );

@@ -3,6 +3,7 @@ import { z } from "zod";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { sendBookingConfirmationEmail } from "@/lib/email";
+import { KYC_THRESHOLD_CENTS, WAIVER_AMOUNT_CENTS, calcDepositAmount } from "@/lib/stripe";
 
 const shippingSchema = z.object({
   fullName: z.string().min(2),
@@ -19,9 +20,15 @@ const createRentalSchema = z.object({
   startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   endDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   shippingAddress: shippingSchema,
+  waiverPurchased: z.boolean().optional().default(false),
 });
 
-function calcTotalCents(dailyRate: number, weeklyRate: number | null, monthlyRate: number | null, days: number): number {
+function calcTotalCents(
+  dailyRate: number,
+  weeklyRate: number | null,
+  monthlyRate: number | null,
+  days: number
+): number {
   if (monthlyRate && days >= 28) {
     const months = Math.floor(days / 30);
     const remainder = days % 30;
@@ -54,7 +61,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Validation failed", details: parsed.error.flatten() }, { status: 422 });
   }
 
-  const { itemId, startDate, endDate, shippingAddress } = parsed.data;
+  const { itemId, startDate, endDate, shippingAddress, waiverPurchased } = parsed.data;
 
   const start = new Date(startDate);
   const end = new Date(endDate);
@@ -67,10 +74,25 @@ export async function POST(req: NextRequest) {
 
   const days = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
 
-  const item = await prisma.item.findUnique({
-    where: { id: itemId },
-    select: { id: true, name: true, brand: true, dailyRate: true, weeklyRate: true, monthlyRate: true, depositAmount: true, available: true },
-  });
+  const [item, user] = await Promise.all([
+    prisma.item.findUnique({
+      where: { id: itemId },
+      select: {
+        id: true,
+        name: true,
+        brand: true,
+        dailyRate: true,
+        weeklyRate: true,
+        monthlyRate: true,
+        retailPrice: true,
+        available: true,
+      },
+    }),
+    prisma.user.findUnique({
+      where: { id: userId },
+      select: { kycStatus: true },
+    }),
+  ]);
 
   if (!item) {
     return NextResponse.json({ error: "Item not found" }, { status: 404 });
@@ -79,44 +101,66 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Item is not available for rental" }, { status: 409 });
   }
 
-  // Double-booking check — atomic with transaction
-  const rental = await prisma.$transaction(async (tx) => {
-    const overlap = await tx.rental.findFirst({
-      where: {
-        itemId,
-        status: { in: ["PENDING", "CONFIRMED", "ACTIVE"] },
-        AND: [
-          { startDate: { lt: end } },
-          { endDate: { gt: start } },
-        ],
-      },
-    });
+  const rentalAmount = calcTotalCents(item.dailyRate, item.weeklyRate, item.monthlyRate, days);
 
-    if (overlap) {
-      throw new Error("DOUBLE_BOOKING");
+  // KYC gate: block unverified users for high-value rentals (≥ €500 total)
+  if (rentalAmount >= KYC_THRESHOLD_CENTS) {
+    if (!user || user.kycStatus !== "VERIFIED") {
+      return NextResponse.json(
+        {
+          error: "Identity verification required",
+          kycRequired: true,
+          kycStatus: user?.kycStatus ?? "UNVERIFIED",
+        },
+        { status: 403 }
+      );
     }
+  }
 
-    const totalAmount = calcTotalCents(item.dailyRate, item.weeklyRate, item.monthlyRate, days);
+  const depositAmount = calcDepositAmount(item.retailPrice);
+  const waiverAmount = waiverPurchased ? WAIVER_AMOUNT_CENTS : null;
 
-    return tx.rental.create({
-      data: {
-        userId,
-        itemId,
-        startDate: start,
-        endDate: end,
-        totalAmount,
-        depositAmount: item.depositAmount,
-        shippingAddress,
-        status: "PENDING",
-      },
-      include: {
-        item: { select: { name: true, brand: true, slug: true } },
-        user: { select: { email: true, name: true } },
-      },
+  let rental;
+  try {
+    rental = await prisma.$transaction(async (tx) => {
+      const overlap = await tx.rental.findFirst({
+        where: {
+          itemId,
+          status: { in: ["PENDING", "CONFIRMED", "ACTIVE"] },
+          AND: [{ startDate: { lt: end } }, { endDate: { gt: start } }],
+        },
+      });
+
+      if (overlap) {
+        throw new Error("DOUBLE_BOOKING");
+      }
+
+      return tx.rental.create({
+        data: {
+          userId,
+          itemId,
+          startDate: start,
+          endDate: end,
+          totalAmount: rentalAmount,
+          depositAmount,
+          waiverPurchased,
+          waiverAmount,
+          shippingAddress,
+          status: "PENDING",
+        },
+        include: {
+          item: { select: { name: true, brand: true, slug: true } },
+          user: { select: { email: true, name: true } },
+        },
+      });
     });
-  });
+  } catch (err) {
+    if (err instanceof Error && err.message === "DOUBLE_BOOKING") {
+      return NextResponse.json({ error: "Selected dates overlap with an existing booking" }, { status: 409 });
+    }
+    throw err;
+  }
 
-  // Fire-and-forget confirmation email
   sendBookingConfirmationEmail(rental.user.email, {
     rentalId: rental.id,
     itemName: rental.item.name,
