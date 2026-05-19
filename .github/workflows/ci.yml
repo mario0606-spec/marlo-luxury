@@ -90,6 +90,12 @@ jobs:
       AUTH_SECRET: "build-secret-placeholder"
       RESEND_API_KEY: "re_placeholder"
       NEXT_PUBLIC_APP_URL: "https://marloluxury.com"
+      STRIPE_SECRET_KEY: "sk_test_placeholder"
+      NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: "pk_test_placeholder"
+      STRIPE_WEBHOOK_SECRET: "whsec_placeholder"
+      STRIPE_PRICE_BASIC: "price_placeholder_basic"
+      STRIPE_PRICE_PREMIUM: "price_placeholder_premium"
+      STRIPE_PRICE_VIP: "price_placeholder_vip"
 
     steps:
       - uses: actions/checkout@v4
