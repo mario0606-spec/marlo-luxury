@@ -1,0 +1,56 @@
+import Link from "next/link";
+import { auth, signOut } from "@/lib/auth";
+
+export async function Nav() {
+  const session = await auth();
+  const isAdmin = (session?.user as { role?: string })?.role === "ADMIN";
+
+  return (
+    <nav className="border-b border-stone-200 bg-white sticky top-0 z-40">
+      <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
+        <Link href="/" className="text-xl tracking-widest font-light uppercase">
+          Marlo
+        </Link>
+        <div className="flex items-center gap-6 text-sm tracking-wider uppercase">
+          <Link href="/catalog" className="text-stone-600 hover:text-stone-900">
+            Collection
+          </Link>
+          {session ? (
+            <>
+              {isAdmin && (
+                <Link href="/admin" className="text-stone-600 hover:text-stone-900">
+                  Admin
+                </Link>
+              )}
+              <Link href="/dashboard" className="text-stone-600 hover:text-stone-900">
+                My Account
+              </Link>
+              <form
+                action={async () => {
+                  "use server";
+                  await signOut({ redirectTo: "/" });
+                }}
+              >
+                <button
+                  type="submit"
+                  className="text-stone-600 hover:text-stone-900"
+                >
+                  Sign Out
+                </button>
+              </form>
+            </>
+          ) : (
+            <>
+              <Link href="/auth/signin" className="text-stone-600 hover:text-stone-900">
+                Sign In
+              </Link>
+              <Link href="/auth/signup" className="btn-primary py-2">
+                Join
+              </Link>
+            </>
+          )}
+        </div>
+      </div>
+    </nav>
+  );
+}

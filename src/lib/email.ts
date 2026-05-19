@@ -1,13 +1,16 @@
 import { Resend } from "resend";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
 const FROM = process.env.EMAIL_FROM ?? "noreply@marloluxury.com";
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+
+function getResend() {
+  return new Resend(process.env.RESEND_API_KEY ?? "placeholder");
+}
 
 export async function sendVerificationEmail(email: string, token: string) {
   const url = `${APP_URL}/api/verify-email?token=${token}`;
 
-  await resend.emails.send({
+  await getResend().emails.send({
     from: FROM,
     to: email,
     subject: "Verify your Marlo account",
@@ -30,7 +33,7 @@ export async function sendVerificationEmail(email: string, token: string) {
 export async function sendPasswordResetEmail(email: string, token: string) {
   const url = `${APP_URL}/auth/reset-password?token=${token}`;
 
-  await resend.emails.send({
+  await getResend().emails.send({
     from: FROM,
     to: email,
     subject: "Reset your Marlo password",
