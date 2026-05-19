@@ -19,6 +19,14 @@ model User {
   image           String?
   role             UserRole  @default(CUSTOMER)
   stripeCustomerId String?   @unique
+  kycStatus        KycStatus @default(UNVERIFIED)
+  kycSubmittedAt   DateTime?
+  kycFullName      String?
+  kycDateOfBirth   DateTime?
+  kycDocumentType  String?
+  kycDocumentNumber String?
+  stripeVerificationSessionId String? @unique
+  availabilityEmailOptOut Boolean   @default(false)
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
 
@@ -32,6 +40,7 @@ model User {
   orders          Order[]
   preferences     UserPreferences?
   reviews         Review[]
+  favorites       Favorite[]
 
   @@index([email])
 }
@@ -106,6 +115,8 @@ model Item {
   rentals         Rental[]
   orderItems      OrderItem[]
   reviews         Review[]
+  purchaseConversions PurchaseConversion[]
+  favorites       Favorite[]
 
   @@index([category])
   @@index([available])
@@ -369,4 +380,56 @@ model WaitlistEntry {
 
   @@index([email])
   @@index([createdAt])
+}
+
+// ─── Purchase Conversions ─────────────────────────────────────────────────────
+
+model PurchaseConversion {
+  id              String                   @id @default(cuid())
+  rentalId        String                   @unique
+  itemId          String
+  userId          String
+  purchasePrice   Int                      // in cents (retail price at time of conversion)
+  creditApplied   Int                      // in cents (last rental fee credited)
+  finalAmount     Int                      // in cents (purchasePrice - creditApplied)
+  stripePaymentId String?
+  status          PurchaseConversionStatus @default(PENDING)
+  createdAt       DateTime                 @default(now())
+  updatedAt       DateTime                 @updatedAt
+
+  rental          Rental                   @relation(fields: [rentalId], references: [id])
+  item            Item                     @relation(fields: [itemId], references: [id])
+
+  @@index([userId])
+  @@index([itemId])
+  @@index([status])
+}
+
+enum PurchaseConversionStatus {
+  PENDING
+  PAID
+  CANCELLED
+}
+
+enum KycStatus {
+  UNVERIFIED
+  PENDING
+  VERIFIED
+  REJECTED
+}
+
+// ─── Favorites / Wishlist ─────────────────────────────────────────────────────
+
+model Favorite {
+  id        String   @id @default(cuid())
+  userId    String
+  itemId    String
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  item      Item     @relation(fields: [itemId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, itemId])
+  @@index([userId])
+  @@index([itemId])
 }

@@ -471,3 +471,40 @@ export async function sendReviewRequestEmail(email: string, data: ReviewRequestD
     `,
   });
 }
+
+export async function sendAvailabilityNotificationEmail(
+  email: string,
+  data: { itemId: string; itemName: string; brand: string; slug: string }
+) {
+  const bookUrl = `${APP_URL}/catalog/${data.slug}`;
+
+  await getResend().emails.send({
+    from: FROM,
+    to: email,
+    subject: `${data.brand} ${data.itemName} is available again`,
+    html: `
+      <div style="font-family:Georgia,serif;max-width:600px;margin:0 auto;padding:40px 20px;background:#fff;">
+        <h1 style="color:#1a1a1a;font-size:24px;margin-bottom:4px;">Marlo Luxury Rentals</h1>
+        <p style="color:#666;font-size:14px;margin-bottom:32px;">A piece you saved is back.</p>
+
+        <div style="border:1px solid #e7e5e4;padding:24px;margin-bottom:24px;">
+          <h2 style="color:#1a1a1a;font-size:14px;letter-spacing:2px;text-transform:uppercase;margin-bottom:12px;">
+            ${data.brand} ${data.itemName} is available again
+          </h2>
+          <p style="color:#57534e;font-size:14px;margin-bottom:20px;">
+            Book it before someone else does.
+          </p>
+          <a href="${bookUrl}"
+             style="display:inline-block;background:#1a1a1a;color:#fff;padding:14px 28px;text-decoration:none;font-size:12px;letter-spacing:2px;text-transform:uppercase;">
+            Book Now
+          </a>
+        </div>
+
+        <p style="color:#a8a29e;font-size:12px;margin-top:32px;">
+          You're receiving this because you saved this item to your favorites on Marlo.
+          <a href="${APP_URL}/dashboard/favorites" style="color:#a8a29e;">Manage favorites</a>
+        </p>
+      </div>
+    `,
+  });
+}

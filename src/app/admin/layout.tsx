@@ -33,6 +33,9 @@ export default async function AdminLayout({
               <Link href="/admin/reviews" className="hover:text-stone-900">
                 Reviews
               </Link>
+              <Link href="/admin/favorites" className="hover:text-stone-900">
+                Favorites
+              </Link>
               <Link href="/catalog" className="hover:text-stone-900">
                 View Catalog
               </Link>
