@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import { prisma } from "@/lib/prisma";
+import { auth } from "@/lib/auth";
 import { ItemCategory, Prisma } from "@prisma/client";
 import { Nav } from "@/components/nav";
 import { ItemCard } from "@/components/item-card";
@@ -30,6 +31,8 @@ async function ItemGrid({
   q: string;
   page: number;
 }) {
+  const session = await auth();
+  const userId = (session?.user as { id?: string } | undefined)?.id;
   const where: Prisma.ItemWhereInput = {
     category: { not: ItemCategory.JEWELRY },
   };
@@ -57,7 +60,7 @@ async function ItemGrid({
     ];
   }
 
-  const [items, total] = await Promise.all([
+  const [items, total, userFavorites] = await Promise.all([
     prisma.item.findMany({
       where,
       orderBy: [{ featured: "desc" }, { createdAt: "desc" }],
@@ -77,7 +80,12 @@ async function ItemGrid({
       },
     }),
     prisma.item.count({ where }),
+    userId
+      ? prisma.favorite.findMany({ where: { userId }, select: { itemId: true } })
+      : Promise.resolve([]),
   ]);
+
+  const favoritedIds = new Set(userFavorites.map((f) => f.itemId));
 
   const totalPages = Math.ceil(total / PAGE_SIZE);
 
@@ -101,7 +109,11 @@ async function ItemGrid({
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {items.map((item) => (
-          <ItemCard key={item.id} item={item} />
+          <ItemCard
+            key={item.id}
+            item={item}
+            isFavorited={userId ? favoritedIds.has(item.id) : undefined}
+          />
         ))}
       </div>
 

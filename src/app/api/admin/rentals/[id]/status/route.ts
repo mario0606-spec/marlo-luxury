@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { z } from "zod";
-import { sendDispatchEmail, sendPurchaseOfferEmail } from "@/lib/email";
+import { sendDispatchEmail, sendPurchaseOfferEmail, sendAvailabilityNotificationEmail } from "@/lib/email";
 
 async function requireAdmin() {
   const session = await auth();
@@ -28,7 +28,7 @@ export async function PATCH(
   const rental = await prisma.rental.findUnique({
     where: { id },
     include: {
-      item: { select: { name: true, brand: true, purchasable: true, purchasePrice: true } },
+      item: { select: { name: true, brand: true, slug: true, purchasable: true, purchasePrice: true } },
       user: { select: { email: true, name: true } },
       conditionLogs: { select: { phase: true, photos: true, status: true } },
     },
@@ -101,6 +101,14 @@ export async function PATCH(
     } catch (err) {
       console.error("Failed to process purchase lead for rental", id, err);
     }
+
+    // Mark item available and notify favoriting users
+    try {
+      await prisma.item.update({ where: { id: rental.itemId }, data: { available: true } });
+      await notifyFavoritingUsers(rental.itemId, rental.item.name, rental.item.brand, rental.item.slug);
+    } catch (err) {
+      console.error("Failed to send availability notifications for item", rental.itemId, err);
+    }
   }
 
   return NextResponse.json(updated);
@@ -155,4 +163,19 @@ async function checkAndSendPurchaseOffer(
   });
 
   console.log(`Purchase offer sent for rental ${rentalId} (${completedCount} rentals of item ${itemId})`);
+}
+
+async function notifyFavoritingUsers(itemId: string, itemName: string, brand: string, slug: string) {
+  const favs = await prisma.favorite.findMany({
+    where: { itemId },
+    include: { user: { select: { email: true, availabilityEmailOptOut: true } } },
+  });
+
+  await Promise.allSettled(
+    favs
+      .filter((f) => !f.user.availabilityEmailOptOut)
+      .map((f) =>
+        sendAvailabilityNotificationEmail(f.user.email, { itemId, itemName, brand, slug })
+      )
+  );
 }

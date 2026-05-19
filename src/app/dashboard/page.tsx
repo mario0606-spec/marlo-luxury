@@ -43,6 +43,7 @@ export default async function DashboardPage() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {[
             { label: "Active Rentals", value: "0", href: "/dashboard/rentals" },
+            { label: "Favorites", value: "0", href: "/dashboard/favorites" },
             { label: "Subscription", value: "None", href: "/dashboard/subscription" },
             { label: "Orders", value: "0", href: "/dashboard/orders" },
           ].map((card) => (

@@ -26,6 +26,7 @@ model User {
   kycDocumentType  String?
   kycDocumentNumber String?
   stripeVerificationSessionId String? @unique
+  availabilityEmailOptOut Boolean   @default(false)
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
 
@@ -35,6 +36,7 @@ model User {
   rentals         Rental[]
   subscriptions   Subscription[]
   orders          Order[]
+  favorites       Favorite[]
 
   @@index([email])
 }
@@ -111,6 +113,7 @@ model Item {
   rentals         Rental[]
   orderItems      OrderItem[]
   purchaseConversions PurchaseConversion[]
+  favorites       Favorite[]
 
   @@index([category])
   @@index([available])
@@ -338,4 +341,20 @@ model WaitlistEntry {
 
   @@index([email])
   @@index([createdAt])
+}
+
+// ─── Favorites / Wishlist ─────────────────────────────────────────────────────
+
+model Favorite {
+  id        String   @id @default(cuid())
+  userId    String
+  itemId    String
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  item      Item     @relation(fields: [itemId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, itemId])
+  @@index([userId])
+  @@index([itemId])
 }
