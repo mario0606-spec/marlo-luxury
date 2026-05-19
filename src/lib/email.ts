@@ -121,3 +121,57 @@ export async function sendPasswordResetEmail(email: string, token: string) {
     `,
   });
 }
+
+interface DispatchEmailData {
+  rentalId: string;
+  itemName: string;
+  brand: string;
+  startDate: string;
+  endDate: string;
+  dispatchPhoto: string | null;
+}
+
+export async function sendDispatchEmail(email: string, data: DispatchEmailData) {
+  const rentalUrl = `${APP_URL}/dashboard/rentals`;
+  const photoHtml = data.dispatchPhoto
+    ? `<div style="margin-bottom:24px;">
+         <img src="${data.dispatchPhoto}" alt="Item condition at dispatch" style="max-width:100%;border:1px solid #e7e5e4;" />
+       </div>`
+    : "";
+
+  await getResend().emails.send({
+    from: FROM,
+    to: email,
+    subject: `Your ${data.brand} ${data.itemName} is on its way`,
+    html: `
+      <div style="font-family:Georgia,serif;max-width:600px;margin:0 auto;padding:40px 20px;background:#fff;">
+        <h1 style="color:#1a1a1a;font-size:24px;margin-bottom:4px;">Marlo Luxury Rentals</h1>
+        <p style="color:#666;font-size:14px;margin-bottom:32px;">Your watch is on its way.</p>
+
+        <div style="border:1px solid #e7e5e4;padding:24px;margin-bottom:24px;">
+          <h2 style="color:#1a1a1a;font-size:14px;letter-spacing:2px;text-transform:uppercase;margin-bottom:16px;">Dispatch Confirmation</h2>
+          <table style="width:100%;font-size:14px;color:#57534e;border-collapse:collapse;">
+            <tr><td style="padding:4px 0;">Item</td><td style="text-align:right;color:#1a1a1a;">${data.brand} ${data.itemName}</td></tr>
+            <tr><td style="padding:4px 0;">Rental period</td><td style="text-align:right;">${data.startDate} — ${data.endDate}</td></tr>
+          </table>
+        </div>
+
+        <h2 style="color:#1a1a1a;font-size:14px;letter-spacing:2px;text-transform:uppercase;margin-bottom:12px;">Current Condition</h2>
+        <p style="color:#666;font-size:13px;margin-bottom:16px;">
+          The following photo documents the condition of your watch at the time of dispatch. 
+          You can view all condition photos in your rental history.
+        </p>
+        ${photoHtml}
+
+        <a href="${rentalUrl}"
+           style="display:inline-block;background:#1a1a1a;color:#fff;padding:14px 28px;text-decoration:none;font-size:12px;letter-spacing:2px;text-transform:uppercase;">
+          View Rental History
+        </a>
+
+        <p style="color:#a8a29e;font-size:12px;margin-top:32px;">
+          Order reference: ${data.rentalId}
+        </p>
+      </div>
+    `,
+  });
+}

@@ -13,9 +13,9 @@ async function requireAdmin() {
 
 const bodySchema = z.object({
   phase: z.enum(["DISPATCH", "RETURN"]),
-  status: z.enum(["PASS", "DAMAGE_NOTED", "FAIL"]),
+  status: z.enum(["PRISTINE", "MINOR_WEAR", "DAMAGE", "MISSING_ITEM"]),
   notes: z.string().max(2000).optional(),
-  photos: z.array(z.string()).max(10),
+  photos: z.array(z.string()).min(2, "At least 2 photos required").max(10),
 });
 
 export async function GET(

@@ -20,7 +20,10 @@ export default async function RentalsPage() {
 
   const rentals = await prisma.rental.findMany({
     where: { userId },
-    include: { item: { select: { name: true, brand: true, images: true, slug: true } } },
+    include: {
+      item: { select: { name: true, brand: true, images: true, slug: true } },
+      conditionLogs: { where: { phase: "DISPATCH" }, select: { photos: true } },
+    },
     orderBy: { createdAt: "desc" },
   });
 
@@ -54,38 +57,58 @@ export default async function RentalsPage() {
                 (rental.endDate.getTime() - rental.startDate.getTime()) / (1000 * 60 * 60 * 24)
               );
 
+              const dispatchPhotos = rental.conditionLogs[0]?.photos ?? [];
+              const showDispatchPhotos = ["ACTIVE", "RETURNED", "OVERDUE"].includes(rental.status) && dispatchPhotos.length > 0;
+
               return (
                 <div
                   key={rental.id}
-                  className="bg-white border border-stone-200 p-6 flex items-start justify-between gap-6"
+                  className="bg-white border border-stone-200 p-6 space-y-4"
                 >
-                  <div className="flex gap-4 items-start">
-                    {rental.item.images[0] && (
-                      <div className="w-16 h-16 flex-shrink-0 bg-stone-100 overflow-hidden">
-                        <img
-                          src={rental.item.images[0]}
-                          alt={rental.item.name}
-                          className="w-full h-full object-cover"
-                        />
+                  <div className="flex items-start justify-between gap-6">
+                    <div className="flex gap-4 items-start">
+                      {rental.item.images[0] && (
+                        <div className="w-16 h-16 flex-shrink-0 bg-stone-100 overflow-hidden">
+                          <img
+                            src={rental.item.images[0]}
+                            alt={rental.item.name}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                      )}
+                      <div>
+                        <p className="font-medium text-stone-900">{rental.item.name}</p>
+                        <p className="text-sm text-stone-500">{rental.item.brand}</p>
+                        <p className="text-xs text-stone-400 mt-1">
+                          {rental.startDate.toLocaleDateString()} – {rental.endDate.toLocaleDateString()}
+                          {" "}({days} day{days !== 1 ? "s" : ""})
+                        </p>
                       </div>
-                    )}
-                    <div>
-                      <p className="font-medium text-stone-900">{rental.item.name}</p>
-                      <p className="text-sm text-stone-500">{rental.item.brand}</p>
-                      <p className="text-xs text-stone-400 mt-1">
-                        {rental.startDate.toLocaleDateString()} – {rental.endDate.toLocaleDateString()}
-                        {" "}({days} day{days !== 1 ? "s" : ""})
-                      </p>
+                    </div>
+
+                    <div className="flex flex-col items-end gap-2 flex-shrink-0">
+                      <span className={`text-xs px-2 py-1 border ${status.className}`}>
+                        {status.label}
+                      </span>
+                      <p className="text-sm font-medium">{formatCents(rental.totalAmount)}</p>
+                      <p className="text-xs text-stone-400">incl. {formatCents(rental.depositAmount)} deposit</p>
                     </div>
                   </div>
 
-                  <div className="flex flex-col items-end gap-2 flex-shrink-0">
-                    <span className={`text-xs px-2 py-1 border ${status.className}`}>
-                      {status.label}
-                    </span>
-                    <p className="text-sm font-medium">{formatCents(rental.totalAmount)}</p>
-                    <p className="text-xs text-stone-400">incl. {formatCents(rental.depositAmount)} deposit</p>
-                  </div>
+                  {showDispatchPhotos && (
+                    <div className="border-t border-stone-100 pt-4">
+                      <p className="text-xs tracking-widest uppercase text-stone-400 mb-2">
+                        Condition at Dispatch
+                      </p>
+                      <div className="flex gap-2 overflow-x-auto">
+                        {dispatchPhotos.slice(0, 4).map((src, i) => (
+                          <div key={i} className="w-20 h-20 flex-shrink-0 overflow-hidden border border-stone-200">
+                            <img src={src} alt={`Dispatch photo ${i + 1}`} className="w-full h-full object-cover" />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               );
             })}

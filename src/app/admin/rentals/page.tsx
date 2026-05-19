@@ -23,9 +23,10 @@ function formatEur(cents: number) {
 }
 
 const CONDITION_STATUS_STYLES: Record<ConditionStatus, string> = {
-  PASS: "text-green-700 bg-green-50 border-green-200",
-  DAMAGE_NOTED: "text-amber-700 bg-amber-50 border-amber-200",
-  FAIL: "text-red-700 bg-red-50 border-red-200",
+  PRISTINE: "text-green-700 bg-green-50 border-green-200",
+  MINOR_WEAR: "text-amber-700 bg-amber-50 border-amber-200",
+  DAMAGE: "text-red-700 bg-red-50 border-red-200",
+  MISSING_ITEM: "text-red-900 bg-red-100 border-red-300",
 };
 
 export default async function AdminRentalsPage() {

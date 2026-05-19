@@ -285,9 +285,10 @@ enum ConditionPhase {
 }
 
 enum ConditionStatus {
-  PASS
-  DAMAGE_NOTED
-  FAIL
+  PRISTINE
+  MINOR_WEAR
+  DAMAGE
+  MISSING_ITEM
 }
 
 // ─── Marketing ──────────────────────────────────────────────────────────────

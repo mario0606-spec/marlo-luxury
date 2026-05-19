@@ -10,7 +10,7 @@ interface Props {
   depositRefunded: boolean;
   depositIntentId: string | null;
   waiverPurchased: boolean;
-  returnStatus: "PASS" | "DAMAGE_NOTED" | "FAIL";
+  returnStatus: string;
 }
 
 function formatEur(cents: number) {
@@ -86,7 +86,7 @@ export default function DepositActions({
 
   return (
     <div className="mt-4 space-y-3">
-      {returnStatus === "PASS" && (
+      {returnStatus === "PRISTINE" && (
         <button
           onClick={() => act("release")}
           disabled={loading}
@@ -95,7 +95,7 @@ export default function DepositActions({
           {loading ? "Processing…" : `Release Deposit (${formatEur(depositAmount)})`}
         </button>
       )}
-      {(returnStatus === "DAMAGE_NOTED" || returnStatus === "FAIL") && (
+      {(returnStatus === "MINOR_WEAR" || returnStatus === "DAMAGE" || returnStatus === "MISSING_ITEM") && (
         <div className="space-y-2">
           <div className="flex items-center gap-3">
             <label className="text-xs tracking-widest uppercase text-stone-500">Capture Amount (€)</label>

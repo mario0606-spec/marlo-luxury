@@ -3,7 +3,7 @@
 import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 
-type ConditionStatus = "PASS" | "DAMAGE_NOTED" | "FAIL";
+type ConditionStatus = "PRISTINE" | "MINOR_WEAR" | "DAMAGE" | "MISSING_ITEM";
 
 interface ExistingLog {
   id: string;
@@ -22,15 +22,17 @@ interface Props {
 }
 
 const STATUS_OPTIONS: { value: ConditionStatus; label: string; desc: string }[] = [
-  { value: "PASS", label: "Pass", desc: "No damage, item in expected condition" },
-  { value: "DAMAGE_NOTED", label: "Damage Noted", desc: "Minor wear or existing damage documented" },
-  { value: "FAIL", label: "Fail", desc: "Significant damage — deposit action required" },
+  { value: "PRISTINE", label: "Pristine", desc: "Perfect condition, no signs of wear" },
+  { value: "MINOR_WEAR", label: "Minor Wear", desc: "Light surface marks consistent with normal use" },
+  { value: "DAMAGE", label: "Damage", desc: "Visible damage beyond normal wear — deposit action required" },
+  { value: "MISSING_ITEM", label: "Missing Item", desc: "Item or component missing — deposit action required" },
 ];
 
 const STATUS_STYLES: Record<ConditionStatus, string> = {
-  PASS: "border-green-500 bg-green-50 text-green-800",
-  DAMAGE_NOTED: "border-amber-500 bg-amber-50 text-amber-800",
-  FAIL: "border-red-500 bg-red-50 text-red-800",
+  PRISTINE: "border-green-500 bg-green-50 text-green-800",
+  MINOR_WEAR: "border-amber-400 bg-amber-50 text-amber-800",
+  DAMAGE: "border-red-500 bg-red-50 text-red-800",
+  MISSING_ITEM: "border-red-700 bg-red-100 text-red-900",
 };
 
 async function resizeImageToDataUrl(file: File): Promise<string> {
@@ -62,7 +64,7 @@ export default function ConditionLogForm({ rentalId, phase, existing }: Props) {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [isEditing, setIsEditing] = useState(!existing);
-  const [status, setStatus] = useState<ConditionStatus>(existing?.status ?? "PASS");
+  const [status, setStatus] = useState<ConditionStatus>(existing?.status ?? "PRISTINE");
   const [notes, setNotes] = useState(existing?.notes ?? "");
   const [photos, setPhotos] = useState<string[]>(existing?.photos ?? []);
   const [loadingPhotos, setLoadingPhotos] = useState(false);
@@ -97,8 +99,8 @@ export default function ConditionLogForm({ rentalId, phase, existing }: Props) {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (photos.length === 0) {
-      setError("Please add at least one photo.");
+    if (photos.length < 2) {
+      setError("Please add at least 2 photos to document the condition.");
       return;
     }
     setSaving(true);
@@ -138,7 +140,7 @@ export default function ConditionLogForm({ rentalId, phase, existing }: Props) {
         </div>
 
         {existing.notes && (
-          <p className="text-sm text-stone-600 italic">"{existing.notes}"</p>
+          <p className="text-sm text-stone-600 italic">&ldquo;{existing.notes}&rdquo;</p>
         )}
 
         {existing.photos.length > 0 && (
@@ -161,9 +163,8 @@ export default function ConditionLogForm({ rentalId, phase, existing }: Props) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
-      {/* Status */}
       <div>
-        <p className="text-xs tracking-widest uppercase text-stone-500 mb-2">Condition Status</p>
+        <p className="text-xs tracking-widest uppercase text-stone-500 mb-2">Condition Assessment</p>
         <div className="flex gap-2 flex-wrap">
           {STATUS_OPTIONS.map((opt) => (
             <label
@@ -189,10 +190,9 @@ export default function ConditionLogForm({ rentalId, phase, existing }: Props) {
         </div>
       </div>
 
-      {/* Photos */}
       <div>
-        <p className="text-xs tracking-widest uppercase text-stone-500 mb-2">
-          Photos ({photos.length}/10)
+        <p className="text-xs tracking-widest uppercase text-stone-500 mb-1">
+          Photos ({photos.length}/10){photos.length < 2 ? " — min. 2 required" : ""}
         </p>
         <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 mb-3">
           {photos.map((src, i) => (
@@ -205,7 +205,7 @@ export default function ConditionLogForm({ rentalId, phase, existing }: Props) {
                 className="absolute top-1 right-1 bg-black/60 text-white text-xs w-5 h-5 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
                 aria-label="Remove photo"
               >
-                ×
+                x
               </button>
             </div>
           ))}
@@ -217,7 +217,7 @@ export default function ConditionLogForm({ rentalId, phase, existing }: Props) {
               className="aspect-square border border-dashed border-stone-300 flex flex-col items-center justify-center text-stone-400 hover:border-stone-500 hover:text-stone-600 transition-colors disabled:opacity-50"
             >
               {loadingPhotos ? (
-                <span className="text-xs">Processing…</span>
+                <span className="text-xs">Processing...</span>
               ) : (
                 <>
                   <span className="text-2xl leading-none">+</span>
@@ -240,7 +240,6 @@ export default function ConditionLogForm({ rentalId, phase, existing }: Props) {
         </p>
       </div>
 
-      {/* Notes */}
       <div>
         <label className="text-xs tracking-widest uppercase text-stone-500 block mb-2">
           Notes (optional)
@@ -250,7 +249,7 @@ export default function ConditionLogForm({ rentalId, phase, existing }: Props) {
           onChange={(e) => setNotes(e.target.value)}
           maxLength={2000}
           rows={3}
-          placeholder={`Describe the condition at ${phaseLabel.toLowerCase()}…`}
+          placeholder={`Describe the condition at ${phaseLabel.toLowerCase()}...`}
           className="w-full border border-stone-200 px-3 py-2 text-sm text-stone-900 placeholder:text-stone-300 focus:outline-none focus:border-stone-400 resize-none"
         />
       </div>
@@ -265,12 +264,18 @@ export default function ConditionLogForm({ rentalId, phase, existing }: Props) {
           disabled={saving || loadingPhotos}
           className="bg-stone-900 text-white text-xs tracking-widest uppercase px-6 py-2 hover:bg-stone-700 transition-colors disabled:opacity-50"
         >
-          {saving ? "Saving…" : `Save ${phaseLabel} Log`}
+          {saving ? "Saving..." : `Save ${phaseLabel} Log`}
         </button>
         {existing && (
           <button
             type="button"
-            onClick={() => { setIsEditing(false); setStatus(existing.status); setNotes(existing.notes ?? ""); setPhotos(existing.photos); setError(null); }}
+            onClick={() => {
+              setIsEditing(false);
+              setStatus(existing.status);
+              setNotes(existing.notes ?? "");
+              setPhotos(existing.photos);
+              setError(null);
+            }}
             className="text-xs tracking-wider uppercase text-stone-500 hover:text-stone-900 px-4 py-2 border border-stone-200"
           >
             Cancel
