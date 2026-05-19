@@ -99,6 +99,256 @@ export async function sendBookingConfirmationEmail(email: string, data: BookingC
   });
 }
 
+interface DispatchConditionData {
+  rentalId: string;
+  itemName: string;
+  brand: string;
+  dispatchPhoto: string; // base64 data URL or external URL
+}
+
+export async function sendDispatchConditionEmail(email: string, data: DispatchConditionData) {
+  const rentalUrl = `${APP_URL}/rentals/${data.rentalId}`;
+
+  const photoHtml = data.dispatchPhoto.startsWith("data:")
+    ? `<img src="${data.dispatchPhoto}" alt="Item condition" style="width:100%;max-width:560px;border:1px solid #e7e5e4;" />`
+    : `<img src="${data.dispatchPhoto}" alt="Item condition" style="width:100%;max-width:560px;border:1px solid #e7e5e4;" />`;
+
+  await getResend().emails.send({
+    from: FROM,
+    to: email,
+    subject: `Your ${data.brand} ${data.itemName} is on its way`,
+    html: `
+      <div style="font-family:Georgia,serif;max-width:600px;margin:0 auto;padding:40px 20px;background:#fff;">
+        <h1 style="color:#1a1a1a;font-size:24px;margin-bottom:4px;">Marlo Luxury Rentals</h1>
+        <p style="color:#666;font-size:14px;margin-bottom:32px;">Your rental is on its way to you.</p>
+
+        <div style="border:1px solid #e7e5e4;padding:24px;margin-bottom:24px;">
+          <h2 style="color:#1a1a1a;font-size:14px;letter-spacing:2px;text-transform:uppercase;margin-bottom:16px;">
+            ${data.brand} ${data.itemName}
+          </h2>
+          <p style="color:#57534e;font-size:14px;margin-bottom:16px;">
+            Here is a photo of your item's condition at the time of dispatch.
+            Please inspect the item upon arrival and contact us if anything looks different.
+          </p>
+          ${photoHtml}
+        </div>
+
+        <a href="${rentalUrl}"
+           style="display:inline-block;background:#1a1a1a;color:#fff;padding:14px 28px;text-decoration:none;font-size:12px;letter-spacing:2px;text-transform:uppercase;">
+          View Rental
+        </a>
+
+        <p style="color:#a8a29e;font-size:12px;margin-top:32px;">
+          Reference: ${data.rentalId}
+        </p>
+      </div>
+    `,
+  });
+}
+
+interface DeliveryConfirmationData {
+  rentalId: string;
+  itemName: string;
+  brand: string;
+  endDate: string;
+}
+
+export async function sendDeliveryConfirmationEmail(email: string, data: DeliveryConfirmationData) {
+  const rentalUrl = `${APP_URL}/dashboard/rentals`;
+
+  await getResend().emails.send({
+    from: FROM,
+    to: email,
+    subject: `Ihr ${data.brand} ${data.itemName} kommt heute an`,
+    html: `
+      <div style="font-family:Georgia,serif;max-width:600px;margin:0 auto;padding:40px 20px;background:#fff;">
+        <h1 style="color:#1a1a1a;font-size:24px;margin-bottom:4px;">Marlo Luxury Rentals</h1>
+        <p style="color:#666;font-size:14px;margin-bottom:32px;">Ihr heutiges Paket ist auf dem Weg.</p>
+
+        <div style="border:1px solid #e7e5e4;padding:24px;margin-bottom:24px;">
+          <h2 style="color:#1a1a1a;font-size:14px;letter-spacing:2px;text-transform:uppercase;margin-bottom:16px;">
+            ${data.brand} ${data.itemName} — Pflegehinweise
+          </h2>
+          <ul style="font-size:14px;color:#57534e;padding-left:20px;line-height:1.8;">
+            <li>Bewahren Sie die Uhr in der mitgelieferten Box auf, wenn Sie sie nicht tragen.</li>
+            <li>Vermeiden Sie Kontakt mit Wasser, Chemikalien oder starker Hitze.</li>
+            <li>Reinigen Sie das Armband nur mit einem trockenen, weichen Tuch.</li>
+            <li>Ziehen Sie die Uhr nicht direkt nach dem Sport an – Schweiß greift das Gehäuse an.</li>
+            <li>Bei Fragen erreichen Sie uns jederzeit über den Live-Chat auf Ihrer Seite.</li>
+          </ul>
+        </div>
+
+        <p style="font-size:14px;color:#57534e;margin-bottom:24px;">
+          Rückgabedatum: <strong>${data.endDate}</strong>. Das vorausbezahlte Rücksendepaket liegt bereits im Paket.
+        </p>
+
+        <a href="${rentalUrl}"
+           style="display:inline-block;background:#1a1a1a;color:#fff;padding:14px 28px;text-decoration:none;font-size:12px;letter-spacing:2px;text-transform:uppercase;">
+          Meine Miete ansehen
+        </a>
+
+        <p style="color:#a8a29e;font-size:12px;margin-top:32px;">
+          Referenz: ${data.rentalId}
+        </p>
+      </div>
+    `,
+  });
+}
+
+interface MidRentalCheckInData {
+  rentalId: string;
+  itemName: string;
+  brand: string;
+  endDate: string;
+}
+
+export async function sendMidRentalCheckInEmail(email: string, data: MidRentalCheckInData) {
+  const catalogUrl = `${APP_URL}/catalog`;
+  const rentalUrl = `${APP_URL}/dashboard/rentals`;
+
+  await getResend().emails.send({
+    from: FROM,
+    to: email,
+    subject: `Wie gefällt Ihnen die ${data.brand} ${data.itemName}?`,
+    html: `
+      <div style="font-family:Georgia,serif;max-width:600px;margin:0 auto;padding:40px 20px;background:#fff;">
+        <h1 style="color:#1a1a1a;font-size:24px;margin-bottom:4px;">Marlo Luxury Rentals</h1>
+        <p style="color:#666;font-size:14px;margin-bottom:32px;">Wir hoffen, Sie genießen Ihre Miete.</p>
+
+        <div style="border:1px solid #e7e5e4;padding:24px;margin-bottom:24px;">
+          <h2 style="color:#1a1a1a;font-size:18px;font-weight:normal;margin-bottom:12px;">
+            Wie behandelt Sie die ${data.brand} ${data.itemName}?
+          </h2>
+          <p style="font-size:14px;color:#57534e;line-height:1.7;">
+            Wir freuen uns zu hören, wie es Ihnen geht. Wenn Sie Fragen haben oder Hilfe benötigen,
+            ist unser Concierge-Team jederzeit für Sie da.
+          </p>
+        </div>
+
+        <p style="font-size:14px;color:#57534e;margin-bottom:24px;">
+          Rückgabedatum: <strong>${data.endDate}</strong>
+        </p>
+
+        <table style="width:100%;border-collapse:collapse;margin-bottom:32px;">
+          <tr>
+            <td style="padding-right:8px;">
+              <a href="${rentalUrl}"
+                 style="display:inline-block;background:#1a1a1a;color:#fff;padding:12px 20px;text-decoration:none;font-size:11px;letter-spacing:2px;text-transform:uppercase;">
+                Miete verlängern
+              </a>
+            </td>
+            <td>
+              <a href="${catalogUrl}"
+                 style="display:inline-block;border:1px solid #1a1a1a;color:#1a1a1a;padding:12px 20px;text-decoration:none;font-size:11px;letter-spacing:2px;text-transform:uppercase;">
+                Nächste Miete buchen
+              </a>
+            </td>
+          </tr>
+        </table>
+
+        <p style="color:#a8a29e;font-size:12px;margin-top:16px;">
+          Referenz: ${data.rentalId}
+        </p>
+      </div>
+    `,
+  });
+}
+
+interface ReturnReminderData {
+  rentalId: string;
+  itemName: string;
+  brand: string;
+  endDate: string;
+}
+
+export async function sendReturnReminderEmail(email: string, data: ReturnReminderData) {
+  const dashboardUrl = `${APP_URL}/dashboard/rentals`;
+
+  await getResend().emails.send({
+    from: FROM,
+    to: email,
+    subject: `Rückgabe in 2 Tagen — ${data.brand} ${data.itemName}`,
+    html: `
+      <div style="font-family:Georgia,serif;max-width:600px;margin:0 auto;padding:40px 20px;background:#fff;">
+        <h1 style="color:#1a1a1a;font-size:24px;margin-bottom:4px;">Marlo Luxury Rentals</h1>
+        <p style="color:#666;font-size:14px;margin-bottom:32px;">Zeit, Abschied zu nehmen.</p>
+
+        <div style="border:1px solid #e7e5e4;padding:24px;margin-bottom:24px;">
+          <h2 style="color:#1a1a1a;font-size:18px;font-weight:normal;margin-bottom:12px;">
+            ${data.brand} ${data.itemName} — Rückgabe am ${data.endDate}
+          </h2>
+          <p style="font-size:14px;color:#57534e;line-height:1.7;margin-bottom:20px;">
+            Ihre Mietzeit endet übermorgen. So funktioniert die Rückgabe:
+          </p>
+          <ol style="font-size:14px;color:#57534e;padding-left:20px;line-height:2;">
+            <li>Legen Sie die Uhr zurück in die mitgelieferte Box.</li>
+            <li>Kleben Sie das vorfrankierte DHL-Rücksendeetikett auf das Paket.</li>
+            <li>Geben Sie das Paket bis <strong>${data.endDate} 18:00 Uhr</strong> bei einer DHL-Filiale ab.</li>
+          </ol>
+          <p style="font-size:13px;color:#a8a29e;margin-top:16px;">
+            Verspätete Rückgaben werden tagesgenau in Rechnung gestellt. Bei Schwierigkeiten melden Sie sich bitte sofort per Chat.
+          </p>
+        </div>
+
+        <a href="${dashboardUrl}"
+           style="display:inline-block;background:#1a1a1a;color:#fff;padding:14px 28px;text-decoration:none;font-size:12px;letter-spacing:2px;text-transform:uppercase;">
+          Meine Buchung ansehen
+        </a>
+
+        <p style="color:#a8a29e;font-size:12px;margin-top:32px;">
+          Referenz: ${data.rentalId}
+        </p>
+      </div>
+    `,
+  });
+}
+
+interface ReturnReceivedData {
+  rentalId: string;
+  itemName: string;
+  brand: string;
+  depositAmount: number;
+}
+
+export async function sendReturnReceivedEmail(email: string, data: ReturnReceivedData) {
+  await getResend().emails.send({
+    from: FROM,
+    to: email,
+    subject: `Wir haben Ihre ${data.brand} ${data.itemName} erhalten`,
+    html: `
+      <div style="font-family:Georgia,serif;max-width:600px;margin:0 auto;padding:40px 20px;background:#fff;">
+        <h1 style="color:#1a1a1a;font-size:24px;margin-bottom:4px;">Marlo Luxury Rentals</h1>
+        <p style="color:#666;font-size:14px;margin-bottom:32px;">Wir haben Ihre Rückgabe erhalten.</p>
+
+        <div style="border:1px solid #e7e5e4;padding:24px;margin-bottom:24px;">
+          <h2 style="color:#1a1a1a;font-size:18px;font-weight:normal;margin-bottom:12px;">
+            ${data.brand} ${data.itemName} — sicher bei uns angekommen
+          </h2>
+          <p style="font-size:14px;color:#57534e;line-height:1.7;">
+            Vielen Dank für die sorgfältige Rückgabe. Wir prüfen den Zustand des Artikels
+            und erstatten die Kaution von <strong>${formatEur(data.depositAmount)}</strong> innerhalb
+            von <strong>3–5 Werktagen</strong> auf Ihre ursprüngliche Zahlungsmethode zurück,
+            sofern keine Schäden festgestellt werden.
+          </p>
+        </div>
+
+        <p style="font-size:14px;color:#57534e;margin-bottom:24px;">
+          Wir freuen uns, Sie bald wieder bei Marlo begrüßen zu dürfen.
+        </p>
+
+        <a href="${APP_URL}/catalog"
+           style="display:inline-block;background:#1a1a1a;color:#fff;padding:14px 28px;text-decoration:none;font-size:12px;letter-spacing:2px;text-transform:uppercase;">
+          Neue Miete starten
+        </a>
+
+        <p style="color:#a8a29e;font-size:12px;margin-top:32px;">
+          Referenz: ${data.rentalId}
+        </p>
+      </div>
+    `,
+  });
+}
+
 export async function sendPasswordResetEmail(email: string, token: string) {
   const url = `${APP_URL}/auth/reset-password?token=${token}`;
 

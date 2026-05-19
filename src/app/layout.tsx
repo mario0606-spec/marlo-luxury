@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { SessionProvider } from "@/components/session-provider";
+import { CrispChat } from "@/components/crisp-chat";
 
 export const metadata: Metadata = {
   title: {
@@ -46,6 +47,7 @@ export default function RootLayout({
     <html lang="en" className="scroll-smooth">
       <body>
         <SessionProvider>{children}</SessionProvider>
+        <CrispChat />
       </body>
     </html>
   );
