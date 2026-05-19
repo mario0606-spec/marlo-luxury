@@ -55,7 +55,7 @@ export default async function ItemDetailPage({ params }: PageProps) {
     },
   });
 
-  if (!item) notFound();
+  if (!item || item.category === "JEWELRY") notFound();
 
   const bookedRanges = item.rentals.map((r) => ({
     start: r.startDate.toISOString().split("T")[0],

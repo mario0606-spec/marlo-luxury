@@ -27,7 +27,7 @@ interface AdminItemFormProps {
   initial?: Partial<ItemFormData>;
 }
 
-const CATEGORIES = ["WATCH", "JEWELRY", "BAG", "ACCESSORY", "OTHER"];
+const CATEGORIES = ["WATCH", "BAG", "ACCESSORY", "OTHER"];
 
 function eurosToCents(value: string) {
   const n = parseFloat(value.replace(",", "."));

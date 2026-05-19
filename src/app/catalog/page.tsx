@@ -30,9 +30,11 @@ async function ItemGrid({
   q: string;
   page: number;
 }) {
-  const where: Prisma.ItemWhereInput = {};
+  const where: Prisma.ItemWhereInput = {
+    category: { not: ItemCategory.JEWELRY },
+  };
 
-  if (category && Object.values(ItemCategory).includes(category as ItemCategory)) {
+  if (category && Object.values(ItemCategory).includes(category as ItemCategory) && category !== "JEWELRY") {
     where.category = category as ItemCategory;
   }
 

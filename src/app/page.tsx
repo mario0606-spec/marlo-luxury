@@ -6,19 +6,19 @@ import { auth } from "@/lib/auth";
 export const metadata: Metadata = {
   title: "Marlo — Wear Luxury. Pay Per Occasion.",
   description:
-    "Rent iconic watches and fine jewelry from the world's finest brands. Flexible daily, weekly, or monthly rentals. Rolex, Patek Philippe, Cartier, and more.",
+    "Rent iconic luxury watches from the world's finest brands. Flexible daily, weekly, or monthly rentals. Rolex, Patek Philippe, Audemars Piguet, and more.",
   keywords: [
-    "luxury rentals",
+    "luxury watch rental",
     "watch rental",
-    "jewelry rental",
     "Rolex rental",
-    "Cartier rental",
-    "luxury accessories",
+    "Patek Philippe rental",
+    "Audemars Piguet rental",
+    "luxury timepiece rental",
   ],
   openGraph: {
     title: "Marlo — Wear Luxury. Pay Per Occasion.",
     description:
-      "Rent iconic watches and fine jewelry from the world's finest brands. Starting from one occasion.",
+      "Rent iconic luxury watches from the world's finest brands. Starting from one occasion.",
     type: "website",
     siteName: "Marlo",
   },
@@ -26,7 +26,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Marlo — Wear Luxury. Pay Per Occasion.",
     description:
-      "Rent iconic watches and fine jewelry from the world's finest brands.",
+      "Rent iconic luxury watches from the world's finest brands. Starting from one occasion.",
   },
 };
 
@@ -110,7 +110,7 @@ export default async function LandingPage() {
 
         <div className="relative z-10 text-center px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto pt-20">
           <p className="text-gold-400 text-[0.65rem] tracking-[0.45em] uppercase mb-10 font-light">
-            Luxury Watches &amp; Jewelry · Rental Marketplace
+            Luxury Watches · Rental Marketplace
           </p>
 
           <h1 className="text-5xl sm:text-6xl lg:text-8xl font-light text-white tracking-tight leading-[1.04] mb-8">
@@ -120,8 +120,8 @@ export default async function LandingPage() {
           </h1>
 
           <p className="text-stone-300/80 text-lg sm:text-xl max-w-2xl mx-auto mb-14 leading-relaxed font-light">
-            Rent iconic watches and fine jewelry from the world's most prestigious
-            brands — for a wedding, gala, or any moment that deserves the extraordinary.
+            Rent iconic watches from the world's most prestigious brands — for a wedding,
+            gala, or any moment that deserves the extraordinary.
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
@@ -143,8 +143,8 @@ export default async function LandingPage() {
             {[
               ["Rolex", "Watches"],
               ["Patek Philippe", "Watches"],
-              ["Cartier", "Jewelry"],
-              ["Van Cleef", "Jewelry"],
+              ["Audemars Piguet", "Watches"],
+              ["Richard Mille", "Watches"],
             ].map(([brand, cat]) => (
               <div key={brand} className="text-center hidden sm:block">
                 <p className="text-xs text-stone-300/60 tracking-wider">{brand}</p>
@@ -185,7 +185,7 @@ export default async function LandingPage() {
               {
                 num: "01",
                 title: "Browse",
-                desc: "Explore our curated selection of Rolex, Patek Philippe, Cartier, Van Cleef & Arpels, and more — every piece authenticated and insured.",
+                desc: "Explore our curated selection of Rolex, Patek Philippe, Audemars Piguet, Richard Mille, and more — every timepiece authenticated and insured.",
               },
               {
                 num: "02",
@@ -277,51 +277,48 @@ export default async function LandingPage() {
               </div>
             </div>
 
-            {/* Jewelry card */}
+            {/* Rare & Collectible card */}
             <div
               className="relative overflow-hidden bg-stone-900 aspect-[5/4] group"
               role="img"
-              aria-label="Fine jewelry collection"
+              aria-label="Rare and collectible timepieces"
             >
               <div className="absolute inset-0 bg-gradient-to-tl from-stone-800 via-stone-900 to-stone-950" />
               <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-52 h-52 bg-gold-400/7 rounded-full blur-3xl pointer-events-none" />
-              {/* Diamond / facet pattern */}
+              {/* Tachymetre-style arc */}
               <div
-                className="absolute top-1/2 left-1/2 w-36 h-36 border border-gold-500/20 rotate-45"
+                className="absolute top-1/2 left-1/2 w-48 h-48 rounded-full border border-gold-500/15"
+                style={{ marginTop: "-6rem", marginLeft: "-6rem" }}
+                aria-hidden="true"
+              />
+              <div
+                className="absolute top-1/2 left-1/2 w-36 h-36 rounded-full border border-gold-500/10"
                 style={{ marginTop: "-4.5rem", marginLeft: "-4.5rem" }}
                 aria-hidden="true"
               />
-              <div
-                className="absolute top-1/2 left-1/2 w-24 h-24 border border-gold-500/12 rotate-45"
-                style={{ marginTop: "-3rem", marginLeft: "-3rem" }}
-                aria-hidden="true"
-              />
-              <div
-                className="absolute top-1/2 left-1/2 w-12 h-12 bg-gold-500/8 rotate-45"
-                style={{ marginTop: "-1.5rem", marginLeft: "-1.5rem" }}
-                aria-hidden="true"
-              />
-              {/* Corner facet lines */}
-              <div
-                className="absolute top-1/2 left-1/2 w-48 h-px bg-gold-400/10"
-                style={{ marginTop: 0, marginLeft: "-6rem", transform: "rotate(45deg)" }}
-                aria-hidden="true"
-              />
-              <div
-                className="absolute top-1/2 left-1/2 w-48 h-px bg-gold-400/8"
-                style={{ marginTop: 0, marginLeft: "-6rem", transform: "rotate(-45deg)" }}
-                aria-hidden="true"
-              />
+              {/* Tick marks */}
+              {[0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330].map((deg) => (
+                <div
+                  key={deg}
+                  className="absolute top-1/2 left-1/2 w-px h-3 bg-gold-400/20 origin-bottom"
+                  style={{
+                    marginTop: "-6rem",
+                    marginLeft: "-0.5px",
+                    transform: `rotate(${deg}deg)`,
+                  }}
+                  aria-hidden="true"
+                />
+              ))}
 
               <div className="absolute inset-0 flex flex-col justify-end p-8 sm:p-10">
                 <p className="text-gold-400 text-[0.6rem] tracking-[0.4em] uppercase mb-3 font-light">
-                  Fine Jewelry
+                  Rare &amp; Collectible
                 </p>
                 <h3 className="text-white text-2xl sm:text-3xl font-light tracking-wide mb-4">
-                  Jewelry
+                  Icons
                 </h3>
                 <div className="flex flex-wrap gap-x-4 gap-y-1">
-                  {["Cartier", "Van Cleef & Arpels", "Bulgari", "Tiffany & Co."].map((b) => (
+                  {["Patek Philippe", "Richard Mille", "F.P. Journe", "A. Lange & Söhne"].map((b) => (
                     <span key={b} className="text-stone-400 text-xs tracking-wider">
                       {b}
                     </span>
@@ -438,7 +435,7 @@ export default async function LandingPage() {
               },
               {
                 quote:
-                  "Marlo made it possible to surprise my wife with her dream Cartier bracelet for our anniversary. Effortless.",
+                  "Marlo made it possible to surprise my wife with her dream Patek Philippe for our anniversary. Effortless.",
                 name: "M.L.",
                 detail: "Early member",
               },
@@ -522,7 +519,7 @@ export default async function LandingPage() {
                 Marlo
               </Link>
               <p className="text-stone-500 text-sm leading-relaxed max-w-xs">
-                Luxury watches and fine jewelry, accessible for every occasion — daily rental to monthly subscription.
+                Luxury watches, accessible for every occasion — daily rental to monthly subscription.
               </p>
             </div>
 

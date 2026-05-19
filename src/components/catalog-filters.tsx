@@ -6,7 +6,6 @@ import { useCallback } from "react";
 const CATEGORIES = [
   { value: "", label: "All" },
   { value: "WATCH", label: "Watches" },
-  { value: "JEWELRY", label: "Jewelry" },
   { value: "BAG", label: "Bags" },
   { value: "ACCESSORY", label: "Accessories" },
 ];

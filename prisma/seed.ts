@@ -77,26 +77,6 @@ async function main() {
       featured: true,
     },
     {
-      name: "Cartier Love Bracelet 18K Yellow Gold",
-      slug: "cartier-love-bracelet-18k-yellow-gold",
-      description:
-        "The legendary Cartier Love bracelet — a symbol of eternal love. 18K yellow gold with screwhead motif.",
-      category: ItemCategory.JEWELRY,
-      brand: "Cartier",
-      model: "Love Bracelet",
-      referenceNumber: "B6035517",
-      retailPrice: 690000, // €6,900
-      dailyRate: 6900,
-      weeklyRate: 41400,
-      monthlyRate: 138000,
-      depositAmount: 250000,
-      images: [
-        "https://images.unsplash.com/photo-1611591437281-460bfbe1220a?w=800",
-      ],
-      available: true,
-      featured: true,
-    },
-    {
       name: "Patek Philippe Nautilus 5711",
       slug: "patek-philippe-nautilus-5711",
       description:
@@ -115,25 +95,6 @@ async function main() {
       ],
       available: true,
       featured: true,
-    },
-    {
-      name: "Van Cleef & Arpels Alhambra Necklace",
-      slug: "vcna-alhambra-necklace-turquoise",
-      description:
-        "The iconic Alhambra necklace with turquoise clover motifs in 18K yellow gold. A timeless Van Cleef & Arpels signature.",
-      category: ItemCategory.JEWELRY,
-      brand: "Van Cleef & Arpels",
-      model: "Vintage Alhambra Necklace",
-      retailPrice: 620000, // €6,200
-      dailyRate: 6200,
-      weeklyRate: 37200,
-      monthlyRate: 124000,
-      depositAmount: 200000,
-      images: [
-        "https://images.unsplash.com/photo-1602173574767-37ac01994b2a?w=800",
-      ],
-      available: true,
-      featured: false,
     },
   ];
 

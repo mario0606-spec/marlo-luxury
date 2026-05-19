@@ -8,20 +8,20 @@ export const metadata: Metadata = {
     template: "%s | Marlo",
   },
   description:
-    "Rent luxury watches, jewelry, and accessories for any occasion. Flexible daily, weekly, or monthly rentals. Subscription plans available.",
+    "Rent iconic luxury watches for any occasion. Flexible daily, weekly, or monthly rentals. Rolex, Patek Philippe, Audemars Piguet, and more.",
   keywords: [
-    "luxury rentals",
+    "luxury watch rental",
     "watch rental",
-    "jewelry rental",
     "Rolex rental",
-    "Cartier rental",
-    "luxury accessories",
+    "Patek Philippe rental",
+    "Audemars Piguet rental",
+    "luxury timepiece rental",
     "luxury subscription",
   ],
   openGraph: {
     title: "Marlo — Wear Luxury. Pay Per Occasion.",
     description:
-      "Rent iconic watches and fine jewelry from the world's finest brands. Starting from one occasion.",
+      "Rent iconic luxury watches from the world's finest brands. Starting from one occasion.",
     type: "website",
     siteName: "Marlo",
   },
@@ -29,7 +29,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Marlo — Wear Luxury. Pay Per Occasion.",
     description:
-      "Rent iconic watches and fine jewelry for any occasion. Subscription plans and one-time rentals available.",
+      "Rent iconic luxury watches for any occasion. Subscription plans and one-time rentals available.",
   },
   robots: {
     index: true,
