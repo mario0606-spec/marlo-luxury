@@ -119,6 +119,7 @@ model Rental {
   totalAmount     Int          // in cents
   depositAmount   Int          // in cents
   depositRefunded Boolean      @default(false)
+  shippingAddress Json?
   stripePaymentId String?
   notes           String?      @db.Text
   createdAt       DateTime     @default(now())

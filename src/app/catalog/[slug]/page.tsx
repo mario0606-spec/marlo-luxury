@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
+import { auth } from "@/lib/auth";
 import { Nav } from "@/components/nav";
 import type { Metadata } from "next";
 
@@ -40,6 +41,8 @@ const CATEGORY_LABELS: Record<string, string> = {
 
 export default async function ItemDetailPage({ params }: PageProps) {
   const { slug } = await params;
+  const session = await auth();
+  const isSignedIn = !!(session?.user as { id?: string } | undefined)?.id;
 
   const item = await prisma.item.findUnique({
     where: { slug },
@@ -185,14 +188,20 @@ export default async function ItemDetailPage({ params }: PageProps) {
 
               <div className="mt-6 space-y-3">
                 {item.available ? (
-                  <>
-                    <Link href="/auth/signup" className="btn-primary w-full">
+                  isSignedIn ? (
+                    <Link href={`/book/${item.slug}`} className="btn-primary w-full">
                       Book This Piece
                     </Link>
-                    <p className="text-center text-xs text-stone-400">
-                      Sign in or create an account to book
-                    </p>
-                  </>
+                  ) : (
+                    <>
+                      <Link href={`/auth/signin?callbackUrl=/book/${item.slug}`} className="btn-primary w-full">
+                        Book This Piece
+                      </Link>
+                      <p className="text-center text-xs text-stone-400">
+                        Sign in or create an account to book
+                      </p>
+                    </>
+                  )
                 ) : (
                   <button disabled className="btn-primary w-full opacity-40 cursor-not-allowed">
                     Currently Unavailable
