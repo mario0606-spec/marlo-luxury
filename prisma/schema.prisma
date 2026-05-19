@@ -125,13 +125,32 @@ model Rental {
   createdAt       DateTime     @default(now())
   updatedAt       DateTime     @updatedAt
 
-  user            User         @relation(fields: [userId], references: [id])
-  item            Item         @relation(fields: [itemId], references: [id])
+  user            User           @relation(fields: [userId], references: [id])
+  item            Item           @relation(fields: [itemId], references: [id])
+  conditionLogs   ConditionLog[]
 
   @@index([userId])
   @@index([itemId])
   @@index([status])
   @@index([startDate, endDate])
+}
+
+// ─── Condition Logs ─────────────────────────────────────────────────────────
+
+model ConditionLog {
+  id          String              @id @default(cuid())
+  rentalId    String
+  type        ConditionLogType
+  photos      String[]            // base64 data URLs (≥2 required)
+  notes       String?             @db.Text
+  assessment  ConditionAssessment?
+  capturedAt  DateTime            @default(now())
+  capturedBy  String              // admin user ID
+
+  rental      Rental              @relation(fields: [rentalId], references: [id], onDelete: Cascade)
+
+  @@unique([rentalId, type])
+  @@index([rentalId])
 }
 
 // ─── Subscriptions ──────────────────────────────────────────────────────────
@@ -209,10 +228,23 @@ enum ItemCategory {
 enum RentalStatus {
   PENDING
   CONFIRMED
+  DISPATCHED
   ACTIVE
   RETURNED
   CANCELLED
   OVERDUE
+}
+
+enum ConditionLogType {
+  DISPATCH
+  RETURN
+}
+
+enum ConditionAssessment {
+  PRISTINE
+  MINOR_WEAR
+  DAMAGE
+  MISSING_ITEM
 }
 
 enum SubscriptionPlan {

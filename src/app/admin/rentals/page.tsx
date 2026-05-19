@@ -7,6 +7,7 @@ export const metadata: Metadata = { title: "Admin — Rentals" };
 const STATUS_LABELS: Record<string, { label: string; className: string }> = {
   PENDING: { label: "Pending Payment", className: "text-yellow-700 bg-yellow-50 border-yellow-200" },
   CONFIRMED: { label: "Confirmed", className: "text-blue-700 bg-blue-50 border-blue-200" },
+  DISPATCHED: { label: "Dispatched", className: "text-purple-700 bg-purple-50 border-purple-200" },
   ACTIVE: { label: "Active", className: "text-green-700 bg-green-50 border-green-200" },
   RETURNED: { label: "Returned", className: "text-stone-600 bg-stone-50 border-stone-200" },
   CANCELLED: { label: "Cancelled", className: "text-red-700 bg-red-50 border-red-200" },
@@ -71,16 +72,19 @@ export default async function AdminRentalsPage() {
                 const shortRef = rental.id.slice(-8).toUpperCase();
                 return (
                   <tr key={rental.id} className="border-b border-stone-100 hover:bg-stone-50">
-                    <td className="px-4 py-3 font-mono text-xs text-stone-500">MAR-{shortRef}</td>
+                    <td className="px-4 py-3 font-mono text-xs text-stone-500">
+                      <Link href={`/admin/rentals/${rental.id}`} className="hover:text-stone-800 underline underline-offset-2">
+                        MAR-{shortRef}
+                      </Link>
+                    </td>
                     <td className="px-4 py-3">
                       <p className="text-stone-900">{rental.user.name ?? "—"}</p>
                       <p className="text-xs text-stone-400">{rental.user.email}</p>
                     </td>
                     <td className="px-4 py-3">
                       <Link
-                        href={`/catalog/${rental.item.slug}`}
+                        href={`/admin/rentals/${rental.id}`}
                         className="text-stone-900 hover:text-stone-600"
-                        target="_blank"
                       >
                         {rental.item.name}
                       </Link>
