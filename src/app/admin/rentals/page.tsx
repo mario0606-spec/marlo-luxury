@@ -2,6 +2,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import type { Metadata } from "next";
 import type { ConditionStatus } from "@prisma/client";
+import { DepositActions } from "./deposit-actions";
 
 export const metadata: Metadata = { title: "Admin — Rentals" };
 
@@ -22,6 +23,13 @@ function formatEur(cents: number) {
   }).format(cents / 100);
 }
 
+const KYC_STYLES: Record<string, string> = {
+  UNVERIFIED: "text-stone-500 bg-stone-50 border-stone-200",
+  PENDING: "text-yellow-700 bg-yellow-50 border-yellow-200",
+  VERIFIED: "text-green-700 bg-green-50 border-green-200",
+  REJECTED: "text-red-700 bg-red-50 border-red-200",
+};
+
 const CONDITION_STATUS_STYLES: Record<ConditionStatus, string> = {
   PRISTINE: "text-green-700 bg-green-50 border-green-200",
   MINOR_WEAR: "text-amber-700 bg-amber-50 border-amber-200",
@@ -33,7 +41,7 @@ export default async function AdminRentalsPage() {
   const rentals = await prisma.rental.findMany({
     include: {
       item: { select: { name: true, brand: true, slug: true } },
-      user: { select: { email: true, name: true } },
+      user: { select: { email: true, name: true, kycStatus: true } },
       conditionLogs: { select: { phase: true, status: true } },
     },
     orderBy: { createdAt: "desc" },
@@ -69,6 +77,8 @@ export default async function AdminRentalsPage() {
                 <th className="text-left px-4 py-3 text-xs tracking-widest uppercase text-stone-500 font-normal">Period</th>
                 <th className="text-right px-4 py-3 text-xs tracking-widest uppercase text-stone-500 font-normal">Amount</th>
                 <th className="text-center px-4 py-3 text-xs tracking-widest uppercase text-stone-500 font-normal">Status</th>
+                <th className="text-center px-4 py-3 text-xs tracking-widest uppercase text-stone-500 font-normal">KYC</th>
+                <th className="text-center px-4 py-3 text-xs tracking-widest uppercase text-stone-500 font-normal">Deposit</th>
                 <th className="text-center px-4 py-3 text-xs tracking-widest uppercase text-stone-500 font-normal">Condition</th>
                 <th className="px-4 py-3"></th>
               </tr>
@@ -107,6 +117,22 @@ export default async function AdminRentalsPage() {
                       <span className={`text-xs tracking-widest uppercase px-2 py-0.5 border ${status.className}`}>
                         {status.label}
                       </span>
+                    </td>
+                    <td className="px-4 py-3 text-center">
+                      <span className={`text-xs tracking-widest uppercase px-2 py-0.5 border ${KYC_STYLES[rental.user.kycStatus] ?? KYC_STYLES.UNVERIFIED}`}>
+                        {rental.user.kycStatus}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-center">
+                      <DepositActions
+                        rentalId={rental.id}
+                        waiverPurchased={rental.waiverPurchased}
+                        depositIntentId={rental.depositIntentId}
+                        depositCaptured={rental.depositCaptured}
+                        depositRefunded={rental.depositRefunded}
+                        depositAmount={rental.depositAmount}
+                        depositCaptureAmount={rental.depositCaptureAmount}
+                      />
                     </td>
                     <td className="px-4 py-3 text-center">
                       <div className="flex flex-col gap-1 items-center">
