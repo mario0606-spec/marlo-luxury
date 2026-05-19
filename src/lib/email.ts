@@ -99,6 +99,75 @@ export async function sendBookingConfirmationEmail(email: string, data: BookingC
   });
 }
 
+interface PurchaseOfferData {
+  rentalId: string;
+  itemId: string;
+  itemName: string;
+  brand: string;
+  purchasePrice: number;
+  creditAmount: number;
+  finalPrice: number;
+  purchasable: boolean;
+}
+
+export async function sendPurchaseOfferEmail(email: string, data: PurchaseOfferData) {
+  const purchaseUrl = `${APP_URL}/purchase/${data.itemId}?rentalId=${data.rentalId}`;
+  const notifyUrl = `${APP_URL}/catalog/${data.itemId}`;
+
+  const bodyHtml = data.purchasable
+    ? `
+      <div style="border:1px solid #e7e5e4;padding:24px;margin-bottom:24px;">
+        <h2 style="color:#1a1a1a;font-size:14px;letter-spacing:2px;text-transform:uppercase;margin-bottom:16px;">Exclusive Offer</h2>
+        <table style="width:100%;font-size:14px;color:#57534e;border-collapse:collapse;">
+          <tr><td style="padding:4px 0;">Purchase price</td><td style="text-align:right;color:#1a1a1a;">${formatEur(data.purchasePrice)}</td></tr>
+          <tr><td style="padding:4px 0;color:#16a34a;">Rental credit</td><td style="text-align:right;color:#16a34a;">− ${formatEur(data.creditAmount)}</td></tr>
+          <tr style="border-top:1px solid #e7e5e4;">
+            <td style="padding:8px 0 4px;font-weight:bold;color:#1a1a1a;">You pay</td>
+            <td style="text-align:right;padding:8px 0 4px;font-weight:bold;color:#1a1a1a;">${formatEur(data.finalPrice)}</td>
+          </tr>
+        </table>
+      </div>
+      <a href="${purchaseUrl}"
+         style="display:inline-block;background:#1a1a1a;color:#fff;padding:14px 28px;text-decoration:none;font-size:12px;letter-spacing:2px;text-transform:uppercase;">
+        CLAIM THIS OFFER
+      </a>
+    `
+    : `
+      <p style="color:#57534e;font-size:14px;margin-bottom:24px;">
+        This piece isn't available for purchase yet, but you can register your interest and we'll notify you the moment it becomes available.
+      </p>
+      <a href="${notifyUrl}"
+         style="display:inline-block;background:#1a1a1a;color:#fff;padding:14px 28px;text-decoration:none;font-size:12px;letter-spacing:2px;text-transform:uppercase;">
+        NOTIFY ME WHEN AVAILABLE
+      </a>
+    `;
+
+  await getResend().emails.send({
+    from: FROM,
+    to: email,
+    subject: `Own the ${data.brand} ${data.itemName} — exclusive offer inside`,
+    html: `
+      <div style="font-family:Georgia,serif;max-width:600px;margin:0 auto;padding:40px 20px;background:#fff;">
+        <h1 style="color:#1a1a1a;font-size:24px;margin-bottom:4px;">Marlo Luxury Rentals</h1>
+        <p style="color:#666;font-size:14px;margin-bottom:32px;">You know this piece well — you've worn it twice.</p>
+
+        <h2 style="color:#1a1a1a;font-size:20px;font-weight:normal;margin-bottom:8px;">
+          Make it yours.
+        </h2>
+        <p style="color:#57534e;font-size:14px;margin-bottom:24px;">
+          You've rented the <strong>${data.brand} ${data.itemName}</strong> twice. As a loyal renter, we'd like to offer you the chance to own it — with your last rental fee applied as a credit toward the purchase price.
+        </p>
+
+        ${bodyHtml}
+
+        <p style="color:#a8a29e;font-size:12px;margin-top:32px;">
+          This offer is personal to you and valid for 30 days. Questions? Reply to this email.
+        </p>
+      </div>
+    `,
+  });
+}
+
 export async function sendPasswordResetEmail(email: string, token: string) {
   const url = `${APP_URL}/auth/reset-password?token=${token}`;
 

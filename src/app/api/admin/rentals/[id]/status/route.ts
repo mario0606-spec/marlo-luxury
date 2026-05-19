@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { z } from "zod";
-import { sendDispatchEmail } from "@/lib/email";
+import { sendDispatchEmail, sendPurchaseOfferEmail } from "@/lib/email";
 
 async function requireAdmin() {
   const session = await auth();
@@ -28,7 +28,7 @@ export async function PATCH(
   const rental = await prisma.rental.findUnique({
     where: { id },
     include: {
-      item: { select: { name: true, brand: true } },
+      item: { select: { name: true, brand: true, purchasable: true, purchasePrice: true } },
       user: { select: { email: true, name: true } },
       conditionLogs: { select: { phase: true, photos: true, status: true } },
     },
@@ -94,5 +94,65 @@ export async function PATCH(
     }
   }
 
+  // Check purchase lead trigger when rental is RETURNED
+  if (status === "RETURNED") {
+    try {
+      await checkAndSendPurchaseOffer(id, rental.userId, rental.itemId, rental.totalAmount, rental.item, rental.user.email);
+    } catch (err) {
+      console.error("Failed to process purchase lead for rental", id, err);
+    }
+  }
+
   return NextResponse.json(updated);
+}
+
+async function checkAndSendPurchaseOffer(
+  rentalId: string,
+  userId: string,
+  itemId: string,
+  lastRentalAmount: number,
+  item: { name: string; brand: string; purchasable: boolean; purchasePrice: number | null },
+  email: string
+) {
+  // Count completed rentals by this user for this item (including the just-returned one)
+  const completedCount = await prisma.rental.count({
+    where: {
+      userId,
+      itemId,
+      status: { in: ["RETURNED"] },
+    },
+  });
+
+  if (completedCount < 2) return;
+
+  // Check if offer was already sent for this rental chain
+  const existingLead = await prisma.rental.findFirst({
+    where: { userId, itemId, purchaseLeadSentAt: { not: null } },
+  });
+  if (existingLead) return;
+
+  // Mark the current rental as having the lead sent
+  await prisma.rental.update({
+    where: { id: rentalId },
+    data: {
+      purchaseLeadSentAt: new Date(),
+      purchaseCreditAmount: lastRentalAmount,
+    },
+  });
+
+  const purchasePrice = item.purchasePrice ?? 0;
+  const finalPrice = Math.max(0, purchasePrice - lastRentalAmount);
+
+  await sendPurchaseOfferEmail(email, {
+    rentalId,
+    itemId,
+    itemName: item.name,
+    brand: item.brand,
+    purchasePrice,
+    creditAmount: lastRentalAmount,
+    finalPrice,
+    purchasable: item.purchasable && purchasePrice > 0,
+  });
+
+  console.log(`Purchase offer sent for rental ${rentalId} (${completedCount} rentals of item ${itemId})`);
 }

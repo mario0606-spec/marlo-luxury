@@ -68,6 +68,45 @@ export async function POST(req: NextRequest) {
 
 async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   if (session.mode === "payment") {
+    // Purchase conversion checkout
+    if (session.metadata?.type === "purchase_conversion") {
+      const { rentalId, itemId, userId, creditAmount } = session.metadata;
+      if (!rentalId || !itemId || !userId) return;
+
+      const item = await prisma.item.findUnique({ where: { id: itemId }, select: { purchasePrice: true } });
+      if (!item?.purchasePrice) return;
+
+      const credit = parseInt(creditAmount ?? "0", 10);
+      const finalAmount = Math.max(0, item.purchasePrice - credit);
+      const paymentIntentId = typeof session.payment_intent === "string" ? session.payment_intent : undefined;
+
+      await prisma.purchaseConversion.upsert({
+        where: { rentalId },
+        create: {
+          rentalId,
+          itemId,
+          userId,
+          purchasePrice: item.purchasePrice,
+          creditApplied: credit,
+          finalAmount,
+          status: "PAID",
+          stripePaymentId: paymentIntentId,
+        },
+        update: {
+          status: "PAID",
+          stripePaymentId: paymentIntentId,
+        },
+      });
+
+      await prisma.rental.update({
+        where: { id: rentalId },
+        data: { convertedToPurchaseAt: new Date() },
+      });
+
+      console.log(`Purchase conversion completed for rental ${rentalId}`);
+      return;
+    }
+
     const rentalId = session.metadata?.rentalId;
     if (!rentalId) return;
 

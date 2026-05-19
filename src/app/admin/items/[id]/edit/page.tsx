@@ -40,6 +40,8 @@ export default async function EditItemPage({ params }: PageProps) {
           images: item.images.join("\n"),
           available: item.available,
           featured: item.featured,
+          purchasable: item.purchasable,
+          purchasePrice: item.purchasePrice ? centsToEuros(item.purchasePrice) : "",
         }}
       />
     </main>

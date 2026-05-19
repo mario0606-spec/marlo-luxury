@@ -102,12 +102,15 @@ model Item {
   images          String[]
   available       Boolean     @default(true)
   featured        Boolean     @default(false)
+  purchasable     Boolean     @default(false)
+  purchasePrice   Int?        // in cents; null = not for sale
   metadata        Json?
   createdAt       DateTime    @default(now())
   updatedAt       DateTime    @updatedAt
 
   rentals         Rental[]
   orderItems      OrderItem[]
+  purchaseConversions PurchaseConversion[]
 
   @@index([category])
   @@index([available])
@@ -134,12 +137,16 @@ model Rental {
   shippingAddress Json?
   stripePaymentId String?
   notes           String?      @db.Text
+  purchaseLeadSentAt   DateTime?   // set when purchase offer email is sent
+  convertedToPurchaseAt DateTime?  // set when purchase is completed
+  purchaseCreditAmount  Int?        // in cents, rental fee applied as credit
   createdAt       DateTime     @default(now())
   updatedAt       DateTime     @updatedAt
 
   user            User         @relation(fields: [userId], references: [id])
   item            Item         @relation(fields: [itemId], references: [id])
   conditionLogs   ConditionLog[]
+  purchaseConversion PurchaseConversion?
 
   @@index([userId])
   @@index([itemId])
@@ -222,6 +229,29 @@ model OrderItem {
   @@index([itemId])
 }
 
+// ─── Purchase Conversions ────────────────────────────────────────────────────
+
+model PurchaseConversion {
+  id              String   @id @default(cuid())
+  rentalId        String   @unique
+  itemId          String
+  userId          String
+  purchasePrice   Int      // in cents (retail price at time of conversion)
+  creditApplied   Int      // in cents (last rental fee credited)
+  finalAmount     Int      // in cents (purchasePrice - creditApplied)
+  stripePaymentId String?
+  status          PurchaseConversionStatus @default(PENDING)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  rental          Rental   @relation(fields: [rentalId], references: [id])
+  item            Item     @relation(fields: [itemId], references: [id])
+
+  @@index([userId])
+  @@index([itemId])
+  @@index([status])
+}
+
 // ─── Enums ──────────────────────────────────────────────────────────────────
 
 enum UserRole {
@@ -270,6 +300,12 @@ enum OrderStatus {
 enum TokenType {
   EMAIL_VERIFICATION
   PASSWORD_RESET
+}
+
+enum PurchaseConversionStatus {
+  PENDING
+  PAID
+  CANCELLED
 }
 
 enum KycStatus {

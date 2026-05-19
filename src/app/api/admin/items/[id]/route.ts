@@ -27,6 +27,8 @@ const updateSchema = z.object({
   images: z.array(z.string().url()).min(1).optional(),
   available: z.boolean().optional(),
   featured: z.boolean().optional(),
+  purchasable: z.boolean().optional(),
+  purchasePrice: z.number().int().positive().optional().nullable(),
 });
 
 export async function PATCH(

@@ -19,6 +19,8 @@ interface ItemFormData {
   images: string;
   available: boolean;
   featured: boolean;
+  purchasable: boolean;
+  purchasePrice: string;
 }
 
 interface AdminItemFormProps {
@@ -65,6 +67,8 @@ export function AdminItemForm({ mode, itemId, initial }: AdminItemFormProps) {
     images: initial?.images ?? "",
     available: initial?.available ?? true,
     featured: initial?.featured ?? false,
+    purchasable: initial?.purchasable ?? false,
+    purchasePrice: initial?.purchasePrice ?? "",
   });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -109,6 +113,8 @@ export function AdminItemForm({ mode, itemId, initial }: AdminItemFormProps) {
       images: imageUrls,
       available: form.available,
       featured: form.featured,
+      purchasable: form.purchasable,
+      purchasePrice: form.purchasable && form.purchasePrice ? eurosToCents(form.purchasePrice) : undefined,
     };
 
     setLoading(true);
@@ -307,7 +313,7 @@ export function AdminItemForm({ mode, itemId, initial }: AdminItemFormProps) {
         <p className="text-xs text-stone-400 mt-1">One URL per line. First image is used as the cover.</p>
       </div>
 
-      <div className="flex gap-6">
+      <div className="flex gap-6 flex-wrap">
         <label className="flex items-center gap-2 cursor-pointer">
           <input
             type="checkbox"
@@ -326,7 +332,35 @@ export function AdminItemForm({ mode, itemId, initial }: AdminItemFormProps) {
           />
           <span className="text-sm text-stone-700">Featured item</span>
         </label>
+        <label className="flex items-center gap-2 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={form.purchasable}
+            onChange={(e) => set("purchasable", e.target.checked)}
+            className="w-4 h-4"
+          />
+          <span className="text-sm text-stone-700">Available for purchase</span>
+        </label>
       </div>
+
+      {form.purchasable && (
+        <div>
+          <label className="label">Purchase price (€) *</label>
+          <input
+            type="number"
+            step="0.01"
+            min="0.01"
+            value={form.purchasePrice}
+            onChange={(e) => set("purchasePrice", e.target.value)}
+            className="input-field max-w-xs"
+            required={form.purchasable}
+            placeholder="e.g. 8500.00"
+          />
+          <p className="text-xs text-stone-400 mt-1">
+            The purchase price offered to repeat renters. Their last rental fee will be applied as a credit.
+          </p>
+        </div>
+      )}
 
       <div className="flex gap-4 pt-2">
         <button type="submit" disabled={loading} className="btn-primary">

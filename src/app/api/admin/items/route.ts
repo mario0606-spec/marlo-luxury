@@ -28,6 +28,8 @@ const itemSchema = z.object({
   images: z.array(z.string().url()).min(1),
   available: z.boolean().default(true),
   featured: z.boolean().default(false),
+  purchasable: z.boolean().default(false),
+  purchasePrice: z.number().int().positive().optional(),
 });
 
 export async function GET() {
