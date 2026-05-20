@@ -37,6 +37,8 @@ model User {
   subscriptions   Subscription[]
   orders          Order[]
   favorites       Favorite[]
+  reviews         Review[]
+  preferences     UserPreferences?
 
   @@index([email])
 }
@@ -114,6 +116,7 @@ model Item {
   orderItems      OrderItem[]
   purchaseConversions PurchaseConversion[]
   favorites       Favorite[]
+  reviews         Review[]
 
   @@index([category])
   @@index([available])
@@ -143,6 +146,8 @@ model Rental {
   purchaseLeadSentAt   DateTime?   // set when purchase offer email is sent
   convertedToPurchaseAt DateTime?  // set when purchase is completed
   purchaseCreditAmount  Int?        // in cents, rental fee applied as credit
+  returnedAt           DateTime?   // set when status transitions to RETURNED
+  reviewRequestSentAt  DateTime?   // set when review request email is sent
   createdAt       DateTime     @default(now())
   updatedAt       DateTime     @updatedAt
 
@@ -150,6 +155,7 @@ model Rental {
   item            Item         @relation(fields: [itemId], references: [id])
   conditionLogs   ConditionLog[]
   purchaseConversion PurchaseConversion?
+  review          Review?
 
   @@index([userId])
   @@index([itemId])
@@ -323,11 +329,36 @@ enum ConditionPhase {
   RETURN
 }
 
+enum ReviewStatus {
+  PENDING
+  APPROVED
+  FLAGGED
+  REMOVED
+}
+
 enum ConditionStatus {
   PRISTINE
   MINOR_WEAR
   DAMAGE
   MISSING_ITEM
+}
+
+// ─── Subscription Onboarding ────────────────────────────────────────────────
+
+model UserPreferences {
+  id                 String   @id @default(cuid())
+  userId             String   @unique
+  watchStyle         String   // sports | dress | casual | mixed
+  occasionFocus      String   // business | social_events | everyday | special_occasions
+  caseSizePreference String   // 36-38mm | 39-41mm | 42mm+ | no_preference
+  brandFamiliarity   String[] // Rolex, Patek, IWC, Breitling, Omega, TAG, Nomos, etc.
+  occasionNote       String?  @db.Text
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
 
 // ─── Marketing ──────────────────────────────────────────────────────────────
@@ -341,6 +372,31 @@ model WaitlistEntry {
 
   @@index([email])
   @@index([createdAt])
+}
+
+// ─── Reviews ────────────────────────────────────────────────────────────────
+
+model Review {
+  id             String       @id @default(cuid())
+  userId         String
+  itemId         String
+  rentalId       String       @unique
+  rating         Int
+  body           String?      @db.Text
+  occasion       String?
+  verifiedRental Boolean      @default(true)
+  status         ReviewStatus @default(PENDING)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  item           Item         @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  rental         Rental       @relation(fields: [rentalId], references: [id], onDelete: Cascade)
+
+  @@index([itemId])
+  @@index([userId])
+  @@index([status])
+  @@index([itemId, status])
 }
 
 // ─── Favorites / Wishlist ─────────────────────────────────────────────────────
@@ -357,4 +413,39 @@ model Favorite {
   @@unique([userId, itemId])
   @@index([userId])
   @@index([itemId])
+}
+
+// ─── Founding Members ────────────────────────────────────────────────────────
+
+model FoundingMember {
+  id             String   @id @default(cuid())
+  email          String   @unique
+  firstName      String
+  referralCode   String   @unique
+  referralCount  Int      @default(0)
+  creditCents    Int      @default(0) // €50 = 5000 per successful referral
+  referredByCode String?              // referral code used at signup
+  confirmedAt    DateTime @default(now())
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  referralsGiven    Referral[] @relation("referrer")
+  referralReceived  Referral?  @relation("referred")
+
+  @@index([email])
+  @@index([referralCode])
+}
+
+model Referral {
+  id             String   @id @default(cuid())
+  referrerId     String
+  referredId     String   @unique
+  creditApplied  Boolean  @default(false)
+  creditCents    Int      @default(5000)
+  createdAt      DateTime @default(now())
+
+  referrer       FoundingMember @relation("referrer", fields: [referrerId], references: [id])
+  referred       FoundingMember @relation("referred", fields: [referredId], references: [id])
+
+  @@index([referrerId])
 }
