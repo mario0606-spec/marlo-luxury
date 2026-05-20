@@ -34,7 +34,7 @@ export default async function LandingPage() {
   const session = await auth();
 
   return (
-    <main className="bg-stone-50 overflow-x-hidden">
+    <main id="main-content" className="bg-stone-50 overflow-x-hidden">
       {/* ── Navigation ─────────────────────────────────────────────────────── */}
       <nav
         className="fixed top-0 left-0 right-0 z-50 border-b border-white/10 bg-stone-900/95 backdrop-blur-sm"
@@ -169,7 +169,7 @@ export default async function LandingPage() {
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-20">
-            <p className="text-gold-500 text-[0.65rem] tracking-[0.45em] uppercase mb-4 font-light">
+            <p className="text-gold-700 text-[0.65rem] tracking-[0.45em] uppercase mb-4 font-light" aria-hidden="true">
               The Experience
             </p>
             <h2
@@ -208,7 +208,7 @@ export default async function LandingPage() {
                 <h3 className="text-sm tracking-[0.3em] uppercase font-medium text-stone-900 mb-4">
                   {step.title}
                 </h3>
-                <p className="text-stone-400 text-sm leading-relaxed">{step.desc}</p>
+                <p className="text-stone-600 text-sm leading-relaxed">{step.desc}</p>
               </div>
             ))}
           </div>
@@ -223,7 +223,7 @@ export default async function LandingPage() {
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-20">
-            <p className="text-gold-500 text-[0.65rem] tracking-[0.45em] uppercase mb-4 font-light">
+            <p className="text-gold-700 text-[0.65rem] tracking-[0.45em] uppercase mb-4 font-light" aria-hidden="true">
               The Collection
             </p>
             <h2
@@ -332,13 +332,13 @@ export default async function LandingPage() {
           <div className="mt-5 bg-white border border-stone-200 p-8 sm:p-12">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
               <div>
-                <p className="text-gold-500 text-[0.65rem] tracking-[0.4em] uppercase mb-2 font-light">
+                <p className="text-gold-700 text-[0.65rem] tracking-[0.4em] uppercase mb-2 font-light" aria-hidden="true">
                   Subscriptions
                 </p>
                 <h3 className="text-stone-900 text-xl sm:text-2xl font-light tracking-wide">
                   A new luxury piece, every month
                 </h3>
-                <p className="text-stone-400 text-sm mt-2 leading-relaxed">
+                <p className="text-stone-600 text-sm mt-2 leading-relaxed">
                   Basic · Premium · VIP — curated selections delivered to your door on a recurring basis.
                 </p>
               </div>
@@ -373,7 +373,7 @@ export default async function LandingPage() {
                 <h3 className="text-xs tracking-[0.35em] uppercase font-medium text-stone-900 mb-5">
                   {item.title}
                 </h3>
-                <p className="text-stone-400 text-sm leading-relaxed max-w-xs">{item.desc}</p>
+                <p className="text-stone-600 text-sm leading-relaxed max-w-xs">{item.desc}</p>
               </div>
             ))}
           </div>
@@ -386,7 +386,7 @@ export default async function LandingPage() {
         aria-label="Press coverage"
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <p className="text-center text-stone-400 text-[0.6rem] tracking-[0.45em] uppercase mb-10">
+          <p className="text-center text-stone-600 text-[0.6rem] tracking-[0.45em] uppercase mb-10">
             As Featured In · Coming Soon
           </p>
           <div
@@ -397,7 +397,7 @@ export default async function LandingPage() {
             {["Vogue", "Forbes", "GQ", "Harper's Bazaar", "Financial Times"].map((pub) => (
               <span
                 key={pub}
-                className="text-stone-300 text-sm tracking-[0.25em] uppercase font-light"
+                className="text-stone-600 text-sm tracking-[0.25em] uppercase font-light"
                 role="listitem"
               >
                 {pub}
@@ -414,7 +414,7 @@ export default async function LandingPage() {
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-20">
-            <p className="text-gold-500 text-[0.65rem] tracking-[0.45em] uppercase mb-4 font-light">
+            <p className="text-gold-700 text-[0.65rem] tracking-[0.45em] uppercase mb-4 font-light" aria-hidden="true">
               Kundengeschichten
             </p>
             <h2
@@ -478,10 +478,10 @@ export default async function LandingPage() {
                 </p>
                 <div className="border-t border-stone-200 pt-5">
                   <p className="text-stone-900 text-sm font-medium">{t.name}</p>
-                  <p className="text-stone-400 text-[0.65rem] tracking-widest uppercase mt-1">
+                  <p className="text-stone-600 text-[0.65rem] tracking-widest uppercase mt-1">
                     {t.detail}
                   </p>
-                  <p className="text-gold-500 text-[0.6rem] tracking-wider mt-2">
+                  <p className="text-gold-700 text-[0.6rem] tracking-wider mt-2">
                     {t.watch}
                   </p>
                 </div>

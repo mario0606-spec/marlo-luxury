@@ -3,8 +3,9 @@ import Image from "next/image";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
-import { Nav } from "@/components/nav";
+import { NavServer as Nav } from "@/components/nav-server";
 import { FavoriteButton } from "@/components/favorite-button";
+import { ReviewsSection } from "@/components/reviews-section";
 import type { Metadata } from "next";
 
 interface PageProps {
@@ -46,7 +47,7 @@ export default async function ItemDetailPage({ params }: PageProps) {
   const userId = (session?.user as { id?: string } | undefined)?.id;
   const isSignedIn = !!userId;
 
-  const [item, favorite] = await Promise.all([
+  const [item, favorite, reviews] = await Promise.all([
     prisma.item.findUnique({
       where: { slug },
       include: {
@@ -60,11 +61,31 @@ export default async function ItemDetailPage({ params }: PageProps) {
     userId
       ? prisma.favorite.findFirst({ where: { userId, item: { slug } }, select: { id: true } })
       : null,
+    prisma.review.findMany({
+      where: { item: { slug }, status: "APPROVED" },
+      include: { user: { select: { name: true } } },
+      orderBy: { createdAt: "desc" },
+    }),
   ]);
 
   if (!item || item.category === "JEWELRY") notFound();
 
   const isFavorited = !!favorite;
+
+  const approvedReviews = reviews.map((r) => ({
+    id: r.id,
+    rating: r.rating,
+    body: r.body,
+    occasion: r.occasion,
+    verifiedRental: r.verifiedRental,
+    reviewerName: r.user.name ?? "Member",
+    createdAt: r.createdAt.toISOString(),
+  }));
+
+  const avgRating =
+    approvedReviews.length > 0
+      ? Math.round((approvedReviews.reduce((s, r) => s + r.rating, 0) / approvedReviews.length) * 10) / 10
+      : null;
 
   const bookedRanges = item.rentals.map((r) => ({
     start: r.startDate.toISOString().split("T")[0],
@@ -75,9 +96,9 @@ export default async function ItemDetailPage({ params }: PageProps) {
     <div className="min-h-screen bg-stone-50">
       <Nav />
 
-      <main className="max-w-6xl mx-auto px-4 py-12">
+      <main id="main-content" className="max-w-6xl mx-auto px-4 py-12">
         {/* Breadcrumb */}
-        <nav className="mb-8 flex items-center gap-2 text-xs tracking-widest uppercase text-stone-400">
+        <nav className="mb-8 flex items-center gap-2 text-xs tracking-widest uppercase text-stone-600">
           <Link href="/catalog" className="hover:text-stone-600">
             Collection
           </Link>
@@ -131,7 +152,7 @@ export default async function ItemDetailPage({ params }: PageProps) {
           {/* Details */}
           <div>
             <div className="flex items-center gap-3 mb-2">
-              <span className="text-xs tracking-widest uppercase text-stone-400">
+              <span className="text-xs tracking-widest uppercase text-stone-600">
                 {CATEGORY_LABELS[item.category]}
               </span>
               {!item.available && (
@@ -153,7 +174,16 @@ export default async function ItemDetailPage({ params }: PageProps) {
               )}
             </div>
             {item.referenceNumber && (
-              <p className="text-xs text-stone-400 mb-6">Ref. {item.referenceNumber}</p>
+              <p className="text-xs text-stone-600 mb-2">Ref. {item.referenceNumber}</p>
+            )}
+            {avgRating !== null && approvedReviews.length >= 3 ? (
+              <p className="text-sm text-amber-500 mb-6">
+                {"★".repeat(Math.round(avgRating))}{"☆".repeat(5 - Math.round(avgRating))}{" "}
+                <span className="text-stone-600 font-light">{avgRating.toFixed(1)}</span>
+                <span className="text-stone-600"> — {approvedReviews.length} rental{approvedReviews.length !== 1 ? "s" : ""}</span>
+              </p>
+            ) : (
+              <div className="mb-6" />
             )}
 
             <p className="text-stone-600 leading-relaxed mb-8">{item.description}</p>
@@ -177,7 +207,7 @@ export default async function ItemDetailPage({ params }: PageProps) {
                       <span className="text-lg font-light text-stone-900">
                         {formatEur(item.weeklyRate)}
                       </span>
-                      <span className="ml-2 text-xs text-stone-400">
+                      <span className="ml-2 text-xs text-stone-600">
                         ({formatEur(Math.round(item.weeklyRate / 7))}/day)
                       </span>
                     </div>
@@ -190,7 +220,7 @@ export default async function ItemDetailPage({ params }: PageProps) {
                       <span className="text-lg font-light text-stone-900">
                         {formatEur(item.monthlyRate)}
                       </span>
-                      <span className="ml-2 text-xs text-stone-400">/ month</span>
+                      <span className="ml-2 text-xs text-stone-600">/ month</span>
                     </div>
                   </div>
                 )}
@@ -211,7 +241,7 @@ export default async function ItemDetailPage({ params }: PageProps) {
                       <Link href={`/auth/signin?callbackUrl=/book/${item.slug}`} className="btn-primary w-full">
                         Book This Piece
                       </Link>
-                      <p className="text-center text-xs text-stone-400">
+                      <p className="text-center text-xs text-stone-600">
                         Sign in or create an account to book
                       </p>
                     </>
@@ -274,10 +304,20 @@ export default async function ItemDetailPage({ params }: PageProps) {
             )}
           </div>
         </div>
+
+        {/* Reviews */}
+        <div className="mt-16">
+          <ReviewsSection
+            reviews={approvedReviews}
+            averageRating={avgRating}
+            totalReviews={approvedReviews.length}
+            itemSlug={item.slug}
+          />
+        </div>
       </main>
 
       <footer className="border-t border-stone-200 py-8 mt-16">
-        <div className="max-w-6xl mx-auto px-4 text-center text-xs tracking-wider text-stone-400 uppercase">
+        <div className="max-w-6xl mx-auto px-4 text-center text-xs tracking-wider text-stone-600 uppercase">
           © {new Date().getFullYear()} Marlo Luxury Rentals
         </div>
       </footer>

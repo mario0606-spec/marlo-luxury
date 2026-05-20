@@ -15,6 +15,9 @@ interface ItemCardProps {
     available: boolean;
   };
   isFavorited?: boolean;
+  averageRating?: number | null;
+  reviewCount?: number;
+  priority?: boolean;
 }
 
 function formatPrice(cents: number) {
@@ -25,7 +28,7 @@ function formatPrice(cents: number) {
   }).format(cents / 100);
 }
 
-export function ItemCard({ item, isFavorited }: ItemCardProps) {
+export function ItemCard({ item, isFavorited, averageRating, reviewCount, priority }: ItemCardProps) {
   const image = item.images[0] ?? null;
 
   return (
@@ -39,11 +42,12 @@ export function ItemCard({ item, isFavorited }: ItemCardProps) {
             src={image}
             alt={item.name}
             fill
+            priority={priority}
             className="object-cover group-hover:scale-105 transition-transform duration-500"
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center text-stone-300">
+          <div className="w-full h-full flex items-center justify-center text-stone-500">
             <span className="text-xs tracking-widest uppercase">No image</span>
           </div>
         )}
@@ -61,19 +65,27 @@ export function ItemCard({ item, isFavorited }: ItemCardProps) {
         )}
       </div>
       <div className="p-5">
-        <p className="text-xs tracking-widest uppercase text-stone-400 mb-1">
+        <p className="text-xs tracking-widest uppercase text-stone-600 mb-1">
           {item.brand}
         </p>
-        <h3 className="text-sm font-medium text-stone-900 leading-snug mb-3 line-clamp-2">
+        <h3 className="text-sm font-medium text-stone-900 leading-snug mb-1 line-clamp-2">
           {item.name}
         </h3>
+        {averageRating !== null && averageRating !== undefined && reviewCount ? (
+          <p className="text-xs text-amber-500 mb-2">
+            ★ {averageRating.toFixed(1)}
+            <span className="text-stone-400 ml-1">({reviewCount})</span>
+          </p>
+        ) : (
+          <div className="mb-3" />
+        )}
         <div className="flex items-baseline justify-between">
           <span className="text-sm text-stone-900">
             {formatPrice(item.dailyRate)}
-            <span className="text-xs text-stone-400 ml-1">/ day</span>
+            <span className="text-xs text-stone-600 ml-1">/ day</span>
           </span>
           {item.weeklyRate && (
-            <span className="text-xs text-stone-400">
+            <span className="text-xs text-stone-600">
               {formatPrice(item.weeklyRate)} / week
             </span>
           )}

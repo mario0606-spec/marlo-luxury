@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { Nav } from "@/components/nav";
+import { NavServer as Nav } from "@/components/nav-server";
 import { ItemCard } from "@/components/item-card";
 import type { Metadata } from "next";
 

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Nav } from "@/components/nav";
+import { NavServer as Nav } from "@/components/nav-server";
 import { lookbooks, getLookbook } from "@/lib/lookbooks";
 
 interface PageProps {

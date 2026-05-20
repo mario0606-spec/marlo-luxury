@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { auth, signOut } from "@/lib/auth";
+import { auth } from "@/lib/auth";
+import { NavServer as Nav } from "@/components/nav-server";
 
 export default async function DashboardPage() {
   const session = await auth();
@@ -11,31 +12,9 @@ export default async function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-stone-50">
-      <nav className="border-b border-stone-200 bg-white">
-        <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
-          <Link href="/" className="text-xl tracking-widest font-light uppercase">
-            Marlo
-          </Link>
-          <div className="flex items-center gap-6">
-            <span className="text-sm text-stone-500">{session.user.email}</span>
-            <form
-              action={async () => {
-                "use server";
-                await signOut({ redirectTo: "/" });
-              }}
-            >
-              <button
-                type="submit"
-                className="text-sm tracking-wider uppercase text-stone-600 hover:text-stone-900"
-              >
-                Sign Out
-              </button>
-            </form>
-          </div>
-        </div>
-      </nav>
+      <Nav />
 
-      <main className="max-w-6xl mx-auto px-4 py-16">
+      <main id="main-content" className="max-w-6xl mx-auto px-4 py-16">
         <h1 className="text-3xl font-light tracking-wide mb-8">
           Welcome, {session.user.name ?? "Guest"}
         </h1>

@@ -4,7 +4,7 @@ import Image from "next/image";
 import type { Metadata } from "next";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { Nav } from "@/components/nav";
+import { NavServer as Nav } from "@/components/nav-server";
 
 export const metadata: Metadata = { title: "Booking Confirmed — Marlo" };
 

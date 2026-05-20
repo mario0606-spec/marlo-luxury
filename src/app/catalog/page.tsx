@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { ItemCategory, Prisma } from "@prisma/client";
-import { Nav } from "@/components/nav";
+import { NavServer as Nav } from "@/components/nav-server";
 import { ItemCard } from "@/components/item-card";
 import { CatalogFilters } from "@/components/catalog-filters";
 import type { Metadata } from "next";
@@ -77,6 +77,10 @@ async function ItemGrid({
         images: true,
         available: true,
         featured: true,
+        reviews: {
+          where: { status: "APPROVED" },
+          select: { rating: true },
+        },
       },
     }),
     prisma.item.count({ where }),
@@ -92,7 +96,7 @@ async function ItemGrid({
   if (items.length === 0) {
     return (
       <div className="py-24 text-center">
-        <p className="text-stone-400 text-sm tracking-widest uppercase">
+        <p className="text-stone-600 text-sm tracking-widest uppercase">
           No items found
         </p>
       </div>
@@ -102,37 +106,49 @@ async function ItemGrid({
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
-        <p className="text-xs text-stone-400 tracking-widest uppercase">
+        <p className="text-xs text-stone-600 tracking-widest uppercase">
           {total} {total === 1 ? "piece" : "pieces"}
         </p>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {items.map((item) => (
+        {items.map((item, idx) => {
+          const approvedReviews = item.reviews ?? [];
+          const avgRating =
+            approvedReviews.length >= 3
+              ? Math.round((approvedReviews.reduce((s: number, r: { rating: number }) => s + r.rating, 0) / approvedReviews.length) * 10) / 10
+              : null;
+          return (
           <ItemCard
             key={item.id}
             item={item}
             isFavorited={userId ? favoritedIds.has(item.id) : undefined}
+            averageRating={avgRating}
+            reviewCount={approvedReviews.length >= 3 ? approvedReviews.length : undefined}
+            priority={idx < 3}
           />
-        ))}
+          );
+        })}
       </div>
 
       {totalPages > 1 && (
-        <div className="mt-12 flex justify-center gap-2">
+        <nav aria-label="Pagination" className="mt-12 flex justify-center gap-2">
           {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
             <a
               key={p}
               href={`?page=${p}${category ? `&category=${category}` : ""}${price ? `&price=${price}` : ""}${q ? `&q=${q}` : ""}`}
-              className={`w-10 h-10 flex items-center justify-center text-sm border transition-colors ${
+              aria-label={`Page ${p}`}
+              aria-current={p === page ? "page" : undefined}
+              className={`min-w-[44px] min-h-[44px] flex items-center justify-center text-sm border transition-colors ${
                 p === page
                   ? "bg-stone-900 text-white border-stone-900"
-                  : "border-stone-200 text-stone-600 hover:border-stone-900"
+                  : "border-stone-200 text-stone-700 hover:border-stone-900"
               }`}
             >
               {p}
             </a>
           ))}
-        </div>
+        </nav>
       )}
     </div>
   );
@@ -149,9 +165,9 @@ export default async function CatalogPage({ searchParams }: PageProps) {
     <div className="min-h-screen bg-stone-50">
       <Nav />
 
-      <main className="max-w-6xl mx-auto px-4 py-12">
+      <main id="main-content" className="max-w-6xl mx-auto px-4 py-12">
         <header className="mb-10">
-          <p className="text-xs tracking-widest uppercase text-stone-400 mb-3">
+          <p className="text-xs tracking-widest uppercase text-stone-600 mb-3">
             Marlo Collection
           </p>
           <h1 className="text-4xl font-light tracking-tight text-stone-900">
@@ -185,7 +201,7 @@ export default async function CatalogPage({ searchParams }: PageProps) {
       </main>
 
       <footer className="border-t border-stone-200 py-8 mt-16">
-        <div className="max-w-6xl mx-auto px-4 text-center text-xs tracking-wider text-stone-400 uppercase">
+        <div className="max-w-6xl mx-auto px-4 text-center text-xs tracking-wider text-stone-600 uppercase">
           © {new Date().getFullYear()} Marlo Luxury Rentals
         </div>
       </footer>

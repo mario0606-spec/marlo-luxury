@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Nav } from "@/components/nav";
+import { NavServer as Nav } from "@/components/nav-server";
 import { lookbooks } from "@/lib/lookbooks";
 
 export const metadata: Metadata = {
