@@ -415,35 +415,52 @@ export default async function LandingPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-20">
             <p className="text-gold-500 text-[0.65rem] tracking-[0.45em] uppercase mb-4 font-light">
-              Early Members
+              Kundengeschichten
             </p>
             <h2
               id="testimonials-heading"
               className="text-3xl sm:text-4xl font-light text-stone-900 tracking-tight"
             >
-              Loved Before Launch
+              Echte Momente. Echte Uhren.
             </h2>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {[
               {
                 quote:
-                  "Finally, a way to wear the Rolex I've always dreamed of — for my wedding day, without a life-changing purchase.",
-                name: "S.K.",
-                detail: "Early member",
+                  "Ich hab' sie getragen, als ob sie meine wäre — weil sie es für diesen Moment war.",
+                name: "Philipp, 34",
+                detail: "Unternehmensberater, München",
+                watch: "IWC Portugieser Automatic",
               },
               {
                 quote:
-                  "Marlo made it possible to surprise my wife with her dream Patek Philippe for our anniversary. Effortless.",
-                name: "M.L.",
-                detail: "Early member",
+                  "Das Foto von seiner Hand auf meiner — das ist das schönste aus unserer Hochzeit.",
+                name: "Lena & Marcus",
+                detail: "29 und 32, Wien",
+                watch: "Rolex Datejust 41 Weißgold",
               },
               {
                 quote:
-                  "The subscription model is brilliant. A different iconic timepiece every month. I'm completely hooked.",
-                name: "A.P.",
-                detail: "Early member",
+                  "Ich miete seit vier Monaten. Ich habe fünf verschiedene Uhren getragen. Ich bin süchtig.",
+                name: "Thomas, 41",
+                detail: "Architekt, Zürich",
+                watch: "AP Royal Oak · Patek Calatrava · Cartier Santos",
+              },
+              {
+                quote:
+                  "Ich wollte zur Preisverleihung nicht wie ein Imposter aussehen. Die Uhr hat das verhindert.",
+                name: "Claudia, 38",
+                detail: "Unternehmerin, Hamburg",
+                watch: "Cartier Tank Américaine Gelbgold",
+              },
+              {
+                quote:
+                  "Die Uhr hat mir das Gespräch nicht gegeben. Aber sie hat mir das Gefühl gegeben, dass ich dort hingehöre.",
+                name: "Ben, 26",
+                detail: "Student & Freelancer, Berlin",
+                watch: "TAG Heuer Carrera Calibre 5",
               },
             ].map((t, i) => (
               <article
@@ -456,17 +473,37 @@ export default async function LandingPage() {
                 >
                   &ldquo;
                 </div>
-                <p className="text-stone-600 text-sm leading-relaxed italic flex-1 mb-8">
+                <p className="text-stone-600 text-sm leading-relaxed italic flex-1 mb-6">
                   {t.quote}
                 </p>
-                <div>
+                <div className="border-t border-stone-200 pt-5">
                   <p className="text-stone-900 text-sm font-medium">{t.name}</p>
                   <p className="text-stone-400 text-[0.65rem] tracking-widest uppercase mt-1">
                     {t.detail}
                   </p>
+                  <p className="text-gold-500 text-[0.6rem] tracking-wider mt-2">
+                    {t.watch}
+                  </p>
                 </div>
               </article>
             ))}
+            {/* CTA card */}
+            <article className="bg-stone-900 border border-stone-800 p-8 flex flex-col justify-between">
+              <div>
+                <p className="text-gold-400 text-[0.6rem] tracking-[0.4em] uppercase mb-4">
+                  Alle Stories
+                </p>
+                <p className="text-white text-lg font-light leading-relaxed mb-6">
+                  Zehn Occasion-Lookbooks — von der Hochzeit bis zum Mittelmeer.
+                </p>
+              </div>
+              <Link
+                href="/stories"
+                className="inline-flex items-center gap-2 text-gold-400 hover:text-gold-300 text-xs tracking-widest uppercase transition-colors"
+              >
+                Stories entdecken →
+              </Link>
+            </article>
           </div>
         </div>
       </section>
