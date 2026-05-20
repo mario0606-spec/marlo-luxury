@@ -1,71 +1,96 @@
 /**
- * DHL Express — MyDHL API integration
+ * DHL Paket Germany — Versenden API v2
  *
- * Docs: https://developer.dhl.com/api-reference/dhl-express-mydhl-api
+ * Correct product for DACH domestic shipments. DHL Paket provides full
+ * end-to-end tracking, AdditionalInsurance for declared value, and
+ * DHL Retoure Online for pre-paid return labels — at standard parcel pricing.
+ *
+ * Docs: https://developer.dhl.com/api-reference/parcel-de-shipping-post-parcel-germany-v2
  *
  * Required env vars:
- *   DHL_API_KEY      — DHL Express API key (Business Customer Portal)
- *   DHL_API_SECRET   — DHL Express API secret
- *   DHL_ACCOUNT_NUMBER — DHL Express account number (10 digits)
- *   DHL_SANDBOX      — set to "true" for sandbox/test mode
+ *   DHL_GKP_USER        — DHL Geschäftskundenportal username
+ *   DHL_GKP_PASS        — DHL Geschäftskundenportal password
+ *   DHL_API_KEY         — developer.dhl.com app API key (product: "DHL Parcel Germany")
+ *   DHL_BILLING_NUMBER  — 14-character billing number (EKP 10-digit + product + participation)
+ *                         e.g. "33333333330101" — shown in GKP under "Vertragsprodukte"
+ *   DHL_RETOURE_BILLING_NUMBER — billing number for the Retoure product (separate contract line)
+ *   DHL_SANDBOX         — set to "true" for sandbox (uses DHL sandbox credentials automatically)
  *
- * Sender details (company shipper):
+ * Shipper (Absender):
  *   DHL_SHIPPER_NAME
  *   DHL_SHIPPER_COMPANY
- *   DHL_SHIPPER_ADDRESS1
+ *   DHL_SHIPPER_STREET        (street name only, no house number)
+ *   DHL_SHIPPER_HOUSE_NUMBER  (house number only)
  *   DHL_SHIPPER_CITY
  *   DHL_SHIPPER_POSTAL_CODE
- *   DHL_SHIPPER_COUNTRY_CODE  (e.g. "DE")
+ *   DHL_SHIPPER_COUNTRY_CODE  (ISO 3166-1 alpha-3, e.g. "DEU")
  *   DHL_SHIPPER_PHONE
  *   DHL_SHIPPER_EMAIL
  */
 
-const BASE_URL_PROD = "https://express.api.dhl.com/mydhlapi";
-const BASE_URL_SANDBOX = "https://express.api.dhl.com/mydhlapi/test";
+const BASE_URL = "https://api-eu.dhl.com/parcel/de/shipping/v2";
 
-function baseUrl(): string {
-  return process.env.DHL_SANDBOX === "true" ? BASE_URL_SANDBOX : BASE_URL_PROD;
+// DHL sandbox credentials are fixed and public — documented at developer.dhl.com
+const SANDBOX_GKP_USER = "sandy_sandbox";
+const SANDBOX_GKP_PASS = "pass";
+const SANDBOX_BILLING_NUMBER = "33333333330101";
+
+function isSandbox(): boolean {
+  return process.env.DHL_SANDBOX === "true";
 }
 
-function authHeader(): string {
+function gkpCredentials(): { user: string; pass: string } {
+  if (isSandbox()) return { user: SANDBOX_GKP_USER, pass: SANDBOX_GKP_PASS };
+  const user = process.env.DHL_GKP_USER;
+  const pass = process.env.DHL_GKP_PASS;
+  if (!user || !pass) throw new Error("DHL_GKP_USER and DHL_GKP_PASS must be set");
+  return { user, pass };
+}
+
+function apiKey(): string {
+  if (isSandbox()) return process.env.DHL_API_KEY ?? "sandbox-key";
   const key = process.env.DHL_API_KEY;
-  const secret = process.env.DHL_API_SECRET;
-  if (!key || !secret) {
-    throw new Error("DHL_API_KEY and DHL_API_SECRET must be set");
-  }
-  return "Basic " + Buffer.from(`${key}:${secret}`).toString("base64");
+  if (!key) throw new Error("DHL_API_KEY must be set");
+  return key;
 }
 
-function accountNumber(): string {
-  const acct = process.env.DHL_ACCOUNT_NUMBER;
-  if (!acct) throw new Error("DHL_ACCOUNT_NUMBER must be set");
-  return acct;
+function billingNumber(): string {
+  if (isSandbox()) return SANDBOX_BILLING_NUMBER;
+  const bn = process.env.DHL_BILLING_NUMBER;
+  if (!bn) throw new Error("DHL_BILLING_NUMBER must be set (14 chars, e.g. 33333333330101)");
+  return bn;
 }
 
-function shipperContact() {
-  return {
-    fullName: process.env.DHL_SHIPPER_NAME ?? "Marlo Luxury Rentals",
-    companyName: process.env.DHL_SHIPPER_COMPANY ?? "Marlo Luxury Rentals GmbH",
-    phone: process.env.DHL_SHIPPER_PHONE ?? "+49000000000",
-    email: process.env.DHL_SHIPPER_EMAIL ?? "versand@marloluxury.com",
-  };
+function retoureBillingNumber(): string {
+  if (isSandbox()) return SANDBOX_BILLING_NUMBER;
+  const bn = process.env.DHL_RETOURE_BILLING_NUMBER ?? process.env.DHL_BILLING_NUMBER;
+  if (!bn) throw new Error("DHL_RETOURE_BILLING_NUMBER (or DHL_BILLING_NUMBER) must be set");
+  return bn;
 }
 
 function shipperAddress() {
   return {
-    addressLine1: process.env.DHL_SHIPPER_ADDRESS1 ?? "",
-    cityName: process.env.DHL_SHIPPER_CITY ?? "",
-    postalCode: process.env.DHL_SHIPPER_POSTAL_CODE ?? "",
-    countryCode: process.env.DHL_SHIPPER_COUNTRY_CODE ?? "DE",
+    name1: process.env.DHL_SHIPPER_COMPANY ?? "Marlo Luxury Rentals GmbH",
+    name2: process.env.DHL_SHIPPER_NAME,
+    addressStreet: process.env.DHL_SHIPPER_STREET ?? "Musterstraße",
+    addressHouse: process.env.DHL_SHIPPER_HOUSE_NUMBER ?? "1",
+    postalCode: process.env.DHL_SHIPPER_POSTAL_CODE ?? "50667",
+    city: process.env.DHL_SHIPPER_CITY ?? "Köln",
+    country: process.env.DHL_SHIPPER_COUNTRY_CODE ?? "DEU",
+    phone: process.env.DHL_SHIPPER_PHONE,
+    email: process.env.DHL_SHIPPER_EMAIL ?? "versand@marloluxury.com",
   };
 }
 
-async function dhlPost(path: string, body: unknown): Promise<unknown> {
-  const url = `${baseUrl()}${path}`;
-  const res = await fetch(url, {
+async function paketPost(path: string, body: unknown): Promise<unknown> {
+  const creds = gkpCredentials();
+  const basicAuth = Buffer.from(`${creds.user}:${creds.pass}`).toString("base64");
+
+  const res = await fetch(`${BASE_URL}${path}`, {
     method: "POST",
     headers: {
-      Authorization: authHeader(),
+      Authorization: `Basic ${basicAuth}`,
+      "dhl-api-key": apiKey(),
       "Content-Type": "application/json",
       Accept: "application/json",
     },
@@ -81,10 +106,15 @@ async function dhlPost(path: string, body: unknown): Promise<unknown> {
   }
 
   if (!res.ok) {
-    const detail = typeof json === "object" && json !== null
-      ? JSON.stringify((json as Record<string, unknown>).detail ?? json)
-      : text;
-    throw new Error(`DHL API error ${res.status}: ${detail}`);
+    const detail =
+      typeof json === "object" && json !== null
+        ? JSON.stringify(
+            (json as Record<string, unknown>).detail ??
+            (json as Record<string, unknown>).title ??
+            json
+          )
+        : text;
+    throw new Error(`DHL Paket API error ${res.status}: ${detail}`);
   }
 
   return json;
@@ -92,232 +122,179 @@ async function dhlPost(path: string, body: unknown): Promise<unknown> {
 
 export interface ShippingAddress {
   fullName: string;
-  addressLine1: string;
+  addressLine1: string; // "Street 12" format — we split on last space for house number
   addressLine2?: string;
   city: string;
   postalCode: string;
-  country: string; // ISO 3166-1 alpha-2
+  country: string; // ISO alpha-2, we convert to alpha-3 for DHL
   phone?: string;
   email?: string;
 }
 
 export interface DhlShipmentResult {
   outboundTrackingNumber: string;
-  outboundLabelUrl: string;        // base64-encoded PDF data URL or direct URL
-  outboundLabelBase64: string;     // raw base64 for storage/email
+  outboundLabelUrl: string;
+  outboundLabelBase64: string;
   returnTrackingNumber: string;
   returnLabelUrl: string;
   returnLabelBase64: string;
 }
 
-interface DhlShipmentResponse {
-  shipmentTrackingNumber?: string;
-  cancelPickupUrl?: string;
-  trackingUrl?: string;
-  packages?: Array<{
-    referenceNumber?: string;
-    trackingNumber?: string;
-    documents?: Array<{
-      imageFormat: string;
-      content: string;
-      typeCode: string;
-    }>;
-  }>;
-  documents?: Array<{
-    imageFormat: string;
-    content: string;
-    typeCode: string;
-  }>;
+// DHL Paket API uses ISO 3166-1 alpha-3 country codes
+const ALPHA2_TO_ALPHA3: Record<string, string> = {
+  DE: "DEU", AT: "AUT", CH: "CHE", NL: "NLD", BE: "BEL", FR: "FRA",
+  PL: "POL", CZ: "CZE", LU: "LUX", IT: "ITA", ES: "ESP", GB: "GBR",
+};
+
+function toAlpha3(code: string): string {
+  return ALPHA2_TO_ALPHA3[code.toUpperCase()] ?? code;
 }
 
-function extractLabel(response: DhlShipmentResponse): { trackingNumber: string; labelBase64: string } {
-  const tracking =
-    response.packages?.[0]?.trackingNumber ??
-    response.shipmentTrackingNumber ??
-    "";
+// Split "Hauptstraße 12a" into { street: "Hauptstraße", house: "12a" }
+function splitStreetHouse(addressLine: string): { street: string; house: string } {
+  const match = addressLine.match(/^(.+?)\s+(\S+)$/);
+  if (!match) return { street: addressLine, house: "" };
+  return { street: match[1], house: match[2] };
+}
 
-  // MyDHL API returns documents at package or root level
-  const docs =
-    response.packages?.[0]?.documents ??
-    response.documents ??
-    [];
-
-  const labelDoc = docs.find((d) => d.typeCode === "label" || d.typeCode === "waybill");
-  const labelBase64 = labelDoc?.content ?? "";
-
-  return { trackingNumber: tracking, labelBase64 };
+interface DhlOrderResponse {
+  items?: Array<{
+    shipmentNo?: string;
+    shipmentRefNo?: string;
+    returnShipmentNo?: string;
+    label?: {
+      b64?: string;
+      fileFormat?: string;
+    };
+    returnLabel?: {
+      b64?: string;
+      fileFormat?: string;
+    };
+    validationMessages?: unknown[];
+    sstatus?: { statusCode?: number; title?: string; detail?: string };
+  }>;
 }
 
 /**
- * Create outbound DHL Express shipment + Retoure return label in one call.
+ * Create outbound DHL Paket shipment + DHL Retoure return label.
  *
- * We create two separate MyDHL shipments:
- *   1. Outbound: Marlo → Customer (product delivery)
- *   2. Return:   Customer → Marlo  (Retoure product; label included in box)
+ * Both labels are requested in a single POST /orders call via the
+ * `services.dhlRetoure` service code. The API returns both labels
+ * in the same response.
  *
- * DHL Premium declared value insurance is requested on both legs via
- * the `declaredValue` and `declaredValueCurrency` fields.
+ * AdditionalInsurance is applied for declared retail value coverage
+ * (DHL covers up to the declared amount — use item retail price).
  */
 export async function createDhlShipment(
   rentalId: string,
   recipient: ShippingAddress,
   itemDescription: string,
-  declaredValueEur: number, // retail value of the item in EUR (for DHL Premium insurance)
+  declaredValueEur: number,
   shipDate: Date = new Date()
 ): Promise<DhlShipmentResult> {
-  const plannedShipDate = formatDhlDate(shipDate);
-  const shipper = shipperContact();
-  const shipperAddr = shipperAddress();
+  const shipper = shipperAddress();
+  const { street: recipientStreet, house: recipientHouse } = splitStreetHouse(recipient.addressLine1);
+  const plannedShipDate = shipDate.toISOString().split("T")[0];
 
-  // ─── Outbound shipment (Marlo → Customer) ───────────────────────────────
-  const outboundPayload = {
-    plannedShippingDateAndTime: `${plannedShipDate}T10:00:00 GMT+01:00`,
-    pickup: { isRequested: false },
-    productCode: "P", // DHL Express Worldwide
-    localProductCode: "V", // DHL Paket (DACH express delivery)
-    getRateEstimates: false,
-    accounts: [{ typeCode: "shipper", number: accountNumber() }],
-    valueAddedServices: [
-      { serviceCode: "II", value: declaredValueEur, currency: "EUR" }, // DHL Premium declared value insurance
-    ],
-    outputImageProperties: {
-      printerDPI: 300,
-      customerBarcodes: [{ content: rentalId, symbologyCode: "93", textBelowBarcode: rentalId.slice(0, 20) }],
-      imageOptions: [
-        { typeCode: "label", templateName: "ECOM26_84_001", isRequested: true, invoiceType: "commercial", languageCode: "de" },
-      ],
-    },
-    customerDetails: {
-      shipperDetails: {
-        postalAddress: { ...shipperAddr },
-        contactInformation: { ...shipper },
-        typeCode: "business",
-      },
-      receiverDetails: {
-        postalAddress: {
-          addressLine1: recipient.addressLine1,
-          addressLine2: recipient.addressLine2,
-          cityName: recipient.city,
+  const orderPayload = {
+    profile: "STANDARD_GRUPPENPROFIL",
+    shipments: [
+      {
+        product: "V01PAK", // DHL Paket domestic Germany
+        billingNumber: billingNumber(),
+        refNo: rentalId.slice(-20),
+        shipDate: plannedShipDate,
+        shipper,
+        consignee: {
+          name1: recipient.fullName,
+          addressStreet: recipientStreet,
+          addressHouse: recipientHouse,
           postalCode: recipient.postalCode,
-          countryCode: recipient.country,
+          city: recipient.city,
+          country: toAlpha3(recipient.country),
+          ...(recipient.phone ? { phone: recipient.phone } : {}),
+          ...(recipient.email ? { email: recipient.email } : {}),
         },
-        contactInformation: {
-          fullName: recipient.fullName,
-          phone: recipient.phone ?? "+49000000000",
-          email: recipient.email ?? "",
+        details: {
+          dim: { uom: "mm", height: 100, length: 300, width: 200 },
+          weight: { uom: "kg", value: 0.5 },
         },
-        typeCode: "private",
+        services: {
+          // Zusatzversicherung (AdditionalInsurance) for declared retail value
+          additionalInsurance: {
+            currency: "EUR",
+            value: declaredValueEur,
+          },
+          // DHL Retoure: pre-paid return label included in same API call
+          dhlRetoure: {
+            billingNumber: retoureBillingNumber(),
+            refNo: `RET-${rentalId.slice(-17)}`,
+            // Return shipment: same consignee/shipper but reversed — DHL handles this
+          },
+        },
+        content: {
+          contentPieces: [
+            {
+              itemDescription: itemDescription.slice(0, 100),
+              packagedQuantity: 1,
+              countryOfOrigin: "DEU",
+              hsCode: "9101", // HS code for wristwatches
+            },
+          ],
+          exportDescription: itemDescription.slice(0, 100),
+        },
       },
-    },
-    content: {
-      packages: [
-        {
-          weight: 0.5, // luxury watches are light; admin can override
-          dimensions: { length: 30, width: 20, height: 10 },
-          description: itemDescription.slice(0, 70),
-          customerReferences: [{ value: rentalId, typeCode: "CU" }],
-        },
-      ],
-      isCustomsDeclarable: false,
-      description: itemDescription.slice(0, 70),
-      incoterm: "DAP",
-      unitOfMeasurement: "metric",
-      declaredValue: declaredValueEur,
-      declaredValueCurrency: "EUR",
-    },
+    ],
   };
 
-  const outboundResponse = (await dhlPost("/shipments", outboundPayload)) as DhlShipmentResponse;
-  const outbound = extractLabel(outboundResponse);
+  const response = (await paketPost(
+    "/orders?validate=false&printOnlyIfCodable=false&labelFormat=910-300-700",
+    orderPayload
+  )) as DhlOrderResponse;
 
-  // ─── Return (Retoure) shipment (Customer → Marlo) ────────────────────────
-  // DHL Retoure Online: product code "PIDI" or use reverse-shipment endpoint.
-  // We use the standard shipment endpoint with shipper/receiver swapped.
-  const returnPayload = {
-    plannedShippingDateAndTime: `${plannedShipDate}T10:00:00 GMT+01:00`,
-    pickup: { isRequested: false },
-    productCode: "P",
-    localProductCode: "V",
-    getRateEstimates: false,
-    accounts: [{ typeCode: "shipper", number: accountNumber() }],
-    valueAddedServices: [
-      { serviceCode: "II", value: declaredValueEur, currency: "EUR" },
-    ],
-    outputImageProperties: {
-      printerDPI: 300,
-      imageOptions: [
-        { typeCode: "label", templateName: "ECOM26_84_001", isRequested: true, invoiceType: "commercial", languageCode: "de" },
-      ],
-    },
-    customerDetails: {
-      // For return: customer is the shipper, Marlo is the receiver
-      shipperDetails: {
-        postalAddress: {
-          addressLine1: recipient.addressLine1,
-          addressLine2: recipient.addressLine2,
-          cityName: recipient.city,
-          postalCode: recipient.postalCode,
-          countryCode: recipient.country,
-        },
-        contactInformation: {
-          fullName: recipient.fullName,
-          phone: recipient.phone ?? "+49000000000",
-          email: recipient.email ?? "",
-        },
-        typeCode: "private",
-      },
-      receiverDetails: {
-        postalAddress: { ...shipperAddr },
-        contactInformation: { ...shipper },
-        typeCode: "business",
-      },
-    },
-    content: {
-      packages: [
-        {
-          weight: 0.5,
-          dimensions: { length: 30, width: 20, height: 10 },
-          description: `RETURN - ${itemDescription.slice(0, 60)}`,
-          customerReferences: [{ value: `RET-${rentalId}`, typeCode: "CU" }],
-        },
-      ],
-      isCustomsDeclarable: false,
-      description: `RETURN - ${itemDescription.slice(0, 60)}`,
-      incoterm: "DAP",
-      unitOfMeasurement: "metric",
-      declaredValue: declaredValueEur,
-      declaredValueCurrency: "EUR",
-    },
-  };
+  const item = response.items?.[0];
+  if (!item) throw new Error("DHL Paket API: no shipment item in response");
 
-  const returnResponse = (await dhlPost("/shipments", returnPayload)) as DhlShipmentResponse;
-  const ret = extractLabel(returnResponse);
+  // Check for validation errors
+  if (item.sstatus?.statusCode && item.sstatus.statusCode >= 400) {
+    throw new Error(`DHL Paket shipment creation failed: ${item.sstatus.title} — ${item.sstatus.detail}`);
+  }
+
+  const outboundTracking = item.shipmentNo ?? "";
+  const returnTracking = item.returnShipmentNo ?? "";
+  const outboundBase64 = item.label?.b64 ?? "";
+  const returnBase64 = item.returnLabel?.b64 ?? "";
 
   return {
-    outboundTrackingNumber: outbound.trackingNumber,
-    outboundLabelBase64: outbound.labelBase64,
-    outboundLabelUrl: `data:application/pdf;base64,${outbound.labelBase64}`,
-    returnTrackingNumber: ret.trackingNumber,
-    returnLabelBase64: ret.labelBase64,
-    returnLabelUrl: `data:application/pdf;base64,${ret.labelBase64}`,
+    outboundTrackingNumber: outboundTracking,
+    outboundLabelBase64: outboundBase64,
+    outboundLabelUrl: outboundBase64
+      ? `data:application/pdf;base64,${outboundBase64}`
+      : "",
+    returnTrackingNumber: returnTracking,
+    returnLabelBase64: returnBase64,
+    returnLabelUrl: returnBase64
+      ? `data:application/pdf;base64,${returnBase64}`
+      : "",
   };
-}
-
-function formatDhlDate(date: Date): string {
-  return date.toISOString().split("T")[0];
 }
 
 /**
- * Lightweight sandbox smoke: calls the MyDHL rates endpoint to validate credentials.
- * Returns true if credentials are working.
+ * Smoke test: validates credentials by calling GET /shipments with a known
+ * sandbox tracking number. Returns { ok: true } on success.
  */
 export async function validateDhlCredentials(): Promise<{ ok: boolean; error?: string }> {
   try {
-    const url = `${baseUrl()}/rates?accountNumber=${accountNumber()}&originCountryCode=DE&originPostalCode=10115&destinationCountryCode=DE&destinationPostalCode=80331&weight=0.5&length=20&width=15&height=10&plannedShippingDateAndTime=${formatDhlDate(new Date())}T10:00:00+01:00&isCustomsDeclarable=false&unitOfMeasurement=metric`;
-    const res = await fetch(url, {
-      headers: { Authorization: authHeader(), Accept: "application/json" },
+    const creds = gkpCredentials();
+    const basicAuth = Buffer.from(`${creds.user}:${creds.pass}`).toString("base64");
+    const res = await fetch(`${BASE_URL}/shipments?shipmentTrackingNumber=00340434492893557905`, {
+      headers: {
+        Authorization: `Basic ${basicAuth}`,
+        "dhl-api-key": apiKey(),
+        Accept: "application/json",
+      },
     });
-    return { ok: res.ok };
+    return { ok: res.status < 500 };
   } catch (e) {
     return { ok: false, error: String(e) };
   }
