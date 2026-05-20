@@ -12,6 +12,8 @@ interface ItemCardProps {
     weeklyRate: number | null;
     images: string[];
     available: boolean;
+    avgRating?: number | null;
+    reviewCount?: number;
   };
 }
 
@@ -25,6 +27,7 @@ function formatPrice(cents: number) {
 
 export function ItemCard({ item }: ItemCardProps) {
   const image = item.images[0] ?? null;
+  const showRating = item.avgRating != null;
 
   return (
     <Link
@@ -71,6 +74,12 @@ export function ItemCard({ item }: ItemCardProps) {
             </span>
           )}
         </div>
+        {showRating && (
+          <div className="mt-2 flex items-center gap-1.5">
+            <span className="text-sm text-stone-900">{item.avgRating!.toFixed(1)} ★</span>
+            <span className="text-xs text-stone-400">({item.reviewCount})</span>
+          </div>
+        )}
       </div>
     </Link>
   );

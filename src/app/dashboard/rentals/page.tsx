@@ -27,6 +27,7 @@ export default async function RentalsPage() {
         where: { type: "DISPATCH" },
         select: { photos: true, capturedAt: true },
       },
+      review: { select: { id: true } },
     },
     orderBy: { createdAt: "desc" },
   });
@@ -94,6 +95,24 @@ export default async function RentalsPage() {
                       <p className="text-xs text-stone-400">incl. {formatCents(rental.depositAmount)} deposit</p>
                     </div>
                   </div>
+
+                  {/* Review CTA for returned rentals */}
+                  {rental.status === "RETURNED" && !rental.review && (
+                    <div className="border-t border-stone-100 mt-4 pt-4 flex items-center justify-between">
+                      <p className="text-sm text-stone-500">How was your rental?</p>
+                      <Link
+                        href={`/reviews/submit?rentalId=${rental.id}`}
+                        className="text-xs tracking-widest uppercase border border-stone-900 px-4 py-2 hover:bg-stone-900 hover:text-white transition-colors"
+                      >
+                        Write a Review
+                      </Link>
+                    </div>
+                  )}
+                  {rental.review && (
+                    <div className="border-t border-stone-100 mt-4 pt-4">
+                      <p className="text-xs tracking-widest uppercase text-stone-400">Review submitted ✓</p>
+                    </div>
+                  )}
 
                   {/* Dispatch condition photos */}
                   {dispatchLog && (
