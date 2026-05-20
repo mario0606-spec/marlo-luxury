@@ -371,3 +371,103 @@ export async function sendPasswordResetEmail(email: string, token: string) {
     `,
   });
 }
+
+interface OnboardingConfirmationData {
+  rentalId: string;
+  itemName: string;
+  brand: string;
+  endDate: string;
+  shippingAddress: {
+    fullName: string;
+    addressLine1: string;
+    addressLine2?: string;
+    city: string;
+    postalCode: string;
+    country: string;
+  };
+}
+
+export async function sendOnboardingConfirmationEmail(email: string, data: OnboardingConfirmationData) {
+  const confirmationUrl = `${APP_URL}/onboarding/confirmation/${data.rentalId}`;
+  const addr = data.shippingAddress;
+  const addrLines = [addr.addressLine1, addr.addressLine2, `${addr.postalCode} ${addr.city}`, addr.country]
+    .filter(Boolean)
+    .join(", ");
+
+  await getResend().emails.send({
+    from: FROM,
+    to: email,
+    subject: `Ihre erste Uhr ist auf dem Weg — ${data.brand} ${data.itemName}`,
+    html: `
+      <div style="font-family:Georgia,serif;max-width:600px;margin:0 auto;padding:40px 20px;background:#fff;">
+        <h1 style="color:#1a1a1a;font-size:24px;margin-bottom:4px;letter-spacing:2px;">marianni</h1>
+        <p style="color:#a8a29e;font-size:11px;letter-spacing:3px;text-transform:uppercase;margin-bottom:40px;">Luxury Watch Rentals</p>
+
+        <h2 style="color:#1a1a1a;font-size:20px;font-weight:normal;margin-bottom:8px;">Ihre erste Uhr ist auf dem Weg.</h2>
+        <p style="color:#57534e;font-size:14px;margin-bottom:32px;">
+          Wir haben Ihre Auswahl erhalten und bereiten Ihre erste Uhr für den Versand vor.
+          Sobald das Paket unterwegs ist, erhalten Sie Ihre Tracking-Nummer.
+        </p>
+
+        <div style="border:1px solid #e7e5e4;padding:24px;margin-bottom:24px;">
+          <h3 style="color:#1a1a1a;font-size:12px;letter-spacing:2px;text-transform:uppercase;margin-bottom:16px;">Ihre Auswahl</h3>
+          <p style="color:#1a1a1a;font-size:16px;margin-bottom:4px;">${data.brand}</p>
+          <p style="color:#57534e;font-size:14px;margin-bottom:16px;">${data.itemName}</p>
+          <p style="color:#78716c;font-size:13px;">Rückgabe bis: ${data.endDate}</p>
+          <p style="color:#78716c;font-size:13px;">Lieferung an: ${addrLines}</p>
+        </div>
+
+        <a href="${confirmationUrl}"
+           style="display:inline-block;background:#1a1a1a;color:#fff;padding:14px 28px;text-decoration:none;font-size:12px;letter-spacing:2px;text-transform:uppercase;">
+          Bestellung ansehen
+        </a>
+
+        <p style="color:#a8a29e;font-size:12px;margin-top:40px;line-height:1.6;">
+          Fragen? Antworten Sie einfach auf diese E-Mail oder schreiben Sie uns über den Live-Chat.<br>
+          Wir sind für Sie da.
+        </p>
+      </div>
+    `,
+  });
+}
+
+interface ReviewRequestData {
+  rentalId: string;
+  itemName: string;
+  brand: string;
+  itemSlug: string;
+}
+
+export async function sendReviewRequestEmail(email: string, data: ReviewRequestData) {
+  const reviewUrl = `${APP_URL}/reviews/submit?rentalId=${data.rentalId}`;
+
+  await getResend().emails.send({
+    from: FROM,
+    to: email,
+    subject: `How was your ${data.brand} ${data.itemName}?`,
+    html: `
+      <div style="font-family:Georgia,serif;max-width:600px;margin:0 auto;padding:40px 20px;background:#fff;">
+        <h1 style="color:#1a1a1a;font-size:24px;margin-bottom:4px;">Marlo Luxury Rentals</h1>
+        <p style="color:#666;font-size:14px;margin-bottom:32px;">We hope you enjoyed your rental.</p>
+
+        <div style="border:1px solid #e7e5e4;padding:24px;margin-bottom:24px;">
+          <h2 style="color:#1a1a1a;font-size:18px;font-weight:normal;margin-bottom:12px;">
+            Share your experience with the ${data.brand} ${data.itemName}
+          </h2>
+          <p style="font-size:14px;color:#57534e;line-height:1.7;margin-bottom:24px;">
+            Your review helps other members choose the perfect watch for their occasion.
+            It only takes a minute and means a great deal to our community.
+          </p>
+          <a href="${reviewUrl}"
+             style="display:inline-block;background:#1a1a1a;color:#fff;padding:14px 28px;text-decoration:none;font-size:12px;letter-spacing:2px;text-transform:uppercase;">
+            Write a Review
+          </a>
+        </div>
+
+        <p style="color:#a8a29e;font-size:12px;margin-top:32px;">
+          Reference: ${data.rentalId}
+        </p>
+      </div>
+    `,
+  });
+}

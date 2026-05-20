@@ -1,4 +1,7 @@
+import { redirect } from "next/navigation";
 import Link from "next/link";
+import { auth } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
 
 interface Props {
   searchParams: Promise<{ rentalId?: string; subscription?: string; plan?: string }>;
@@ -7,6 +10,25 @@ interface Props {
 export default async function CheckoutSuccessPage({ searchParams }: Props) {
   const params = await searchParams;
   const isSubscription = params.subscription === "true";
+
+  if (isSubscription) {
+    // Check if this subscriber has already completed onboarding
+    const session = await auth();
+    const userId = (session?.user as { id?: string } | undefined)?.id;
+
+    if (userId) {
+      const user = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { onboardingCompleted: true },
+      });
+
+      if (!user?.onboardingCompleted) {
+        redirect("/onboarding/quiz");
+      }
+    } else {
+      redirect("/onboarding/quiz");
+    }
+  }
 
   return (
     <div className="min-h-screen bg-stone-50 flex flex-col items-center justify-center px-4">
@@ -22,17 +44,15 @@ export default async function CheckoutSuccessPage({ searchParams }: Props) {
         </h1>
 
         <p className="text-stone-500 mb-10">
-          {isSubscription
-            ? `Your ${params.plan ?? ""} subscription is now active. We'll be in touch about your first selection.`
-            : "Your rental is confirmed. We'll prepare your item and be in touch with delivery details."}
+          Your rental is confirmed. We'll prepare your item and be in touch with delivery details.
         </p>
 
         <div className="flex flex-col gap-3">
           <Link
-            href={isSubscription ? "/dashboard/subscription" : "/dashboard/rentals"}
+            href="/dashboard/rentals"
             className="py-3 bg-stone-900 text-white text-sm tracking-widest uppercase hover:bg-stone-800 transition-colors"
           >
-            {isSubscription ? "View Subscription" : "View Rental"}
+            View Rental
           </Link>
           <Link
             href="/dashboard"
