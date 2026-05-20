@@ -123,6 +123,64 @@ export default async function AdminRentalDetailPage({
         </div>
       </div>
 
+      {/* DHL Express shipping info */}
+      {(rental.dhlOutboundTrackingNumber || rental.dhlReturnTrackingNumber) && (
+        <div className="border border-stone-200 bg-white p-6 mb-8">
+          <h2 className="text-xs tracking-widest uppercase text-stone-500 mb-4">DHL Express Shipment</h2>
+          <div className="grid grid-cols-2 gap-6 text-sm">
+            {rental.dhlOutboundTrackingNumber && (
+              <div>
+                <p className="text-stone-500 mb-1">Outbound tracking</p>
+                <a
+                  href={`https://www.dhl.com/de-de/home/tracking/tracking-parcel.html?submit=1&tracking-id=${rental.dhlOutboundTrackingNumber}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="font-mono text-stone-900 underline underline-offset-2 hover:text-stone-600"
+                >
+                  {rental.dhlOutboundTrackingNumber}
+                </a>
+                {rental.dhlOutboundLabelUrl && (
+                  <a
+                    href={rental.dhlOutboundLabelUrl}
+                    download={`label-outbound-${rental.id}.pdf`}
+                    className="ml-4 text-xs tracking-widest uppercase text-stone-400 hover:text-stone-700"
+                  >
+                    Download label
+                  </a>
+                )}
+              </div>
+            )}
+            {rental.dhlReturnTrackingNumber && (
+              <div>
+                <p className="text-stone-500 mb-1">Return (Retoure) tracking</p>
+                <a
+                  href={`https://www.dhl.com/de-de/home/tracking/tracking-parcel.html?submit=1&tracking-id=${rental.dhlReturnTrackingNumber}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="font-mono text-stone-900 underline underline-offset-2 hover:text-stone-600"
+                >
+                  {rental.dhlReturnTrackingNumber}
+                </a>
+                {rental.dhlReturnLabelUrl && (
+                  <a
+                    href={rental.dhlReturnLabelUrl}
+                    download={`label-return-${rental.id}.pdf`}
+                    className="ml-4 text-xs tracking-widest uppercase text-stone-400 hover:text-stone-700"
+                  >
+                    Download label
+                  </a>
+                )}
+              </div>
+            )}
+          </div>
+          {rental.dhlShipmentCreatedAt && (
+            <p className="text-xs text-stone-400 mt-4">
+              Labels generated {new Date(rental.dhlShipmentCreatedAt).toLocaleString("de-DE")}
+            </p>
+          )}
+        </div>
+      )}
+
       {/* Condition log panel — client component */}
       <ConditionLogPanel
         rentalId={rental.id}

@@ -3,6 +3,7 @@ import { z } from "zod";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { sendDispatchConditionEmail } from "@/lib/email";
+import { createDhlShipment } from "@/lib/dhl";
 
 const dispatchSchema = z.object({
   photos: z.array(z.string().min(10)).min(2, "At least 2 photos required"),
@@ -41,7 +42,7 @@ export async function POST(
     where: { id },
     include: {
       user: { select: { email: true, name: true } },
-      item: { select: { name: true, brand: true } },
+      item: { select: { name: true, brand: true, retailPrice: true } },
       conditionLogs: { where: { type: "DISPATCH" } },
     },
   });
@@ -61,6 +62,52 @@ export async function POST(
     return NextResponse.json({ error: "Dispatch condition log already exists" }, { status: 409 });
   }
 
+  // Generate DHL Express outbound + return labels
+  const address = rental.shippingAddress as {
+    fullName: string;
+    addressLine1: string;
+    addressLine2?: string;
+    city: string;
+    postalCode: string;
+    country: string;
+    phone?: string;
+  } | null;
+
+  let dhlResult: {
+    outboundTrackingNumber: string;
+    outboundLabelUrl: string;
+    returnTrackingNumber: string;
+    returnLabelUrl: string;
+  } | null = null;
+  let dhlError: string | null = null;
+
+  if (address && process.env.DHL_API_KEY && process.env.DHL_API_SECRET) {
+    try {
+      dhlResult = await createDhlShipment(
+        rental.id,
+        {
+          fullName: address.fullName,
+          addressLine1: address.addressLine1,
+          addressLine2: address.addressLine2,
+          city: address.city,
+          postalCode: address.postalCode,
+          country: address.country,
+          phone: address.phone,
+          email: rental.user.email,
+        },
+        `${rental.item.brand} ${rental.item.name}`,
+        Math.round(rental.item.retailPrice / 100) // retailPrice is in cents, DHL wants EUR
+      );
+    } catch (err) {
+      // DHL failure is non-fatal: log it, flag in response, but still dispatch
+      dhlError = String(err);
+      console.error("[DHL] Label generation failed:", dhlError);
+    }
+  } else if (!process.env.DHL_API_KEY) {
+    dhlError = "DHL credentials not configured (DHL_API_KEY missing)";
+    console.warn("[DHL]", dhlError);
+  }
+
   const [conditionLog] = await prisma.$transaction([
     prisma.conditionLog.create({
       data: {
@@ -73,7 +120,18 @@ export async function POST(
     }),
     prisma.rental.update({
       where: { id },
-      data: { status: "DISPATCHED" },
+      data: {
+        status: "DISPATCHED",
+        ...(dhlResult
+          ? {
+              dhlOutboundTrackingNumber: dhlResult.outboundTrackingNumber,
+              dhlOutboundLabelUrl: dhlResult.outboundLabelUrl,
+              dhlReturnTrackingNumber: dhlResult.returnTrackingNumber,
+              dhlReturnLabelUrl: dhlResult.returnLabelUrl,
+              dhlShipmentCreatedAt: new Date(),
+            }
+          : {}),
+      },
     }),
   ]);
 
@@ -85,5 +143,20 @@ export async function POST(
     dispatchPhoto: photos[0],
   }).catch((err) => console.error("Dispatch condition email failed:", err));
 
-  return NextResponse.json({ conditionLogId: conditionLog.id, status: "DISPATCHED" }, { status: 201 });
+  return NextResponse.json(
+    {
+      conditionLogId: conditionLog.id,
+      status: "DISPATCHED",
+      dhl: dhlResult
+        ? {
+            outboundTrackingNumber: dhlResult.outboundTrackingNumber,
+            returnTrackingNumber: dhlResult.returnTrackingNumber,
+            outboundLabelUrl: dhlResult.outboundLabelUrl,
+            returnLabelUrl: dhlResult.returnLabelUrl,
+          }
+        : null,
+      dhlError: dhlError ?? undefined,
+    },
+    { status: 201 }
+  );
 }
