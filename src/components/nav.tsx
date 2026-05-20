@@ -16,6 +16,9 @@ export async function Nav() {
           <Link href="/catalog" className="text-stone-600 hover:text-stone-900">
             Kollektion
           </Link>
+          <Link href="/stories" className="text-stone-600 hover:text-stone-900">
+            Stories
+          </Link>
           {session ? (
             <>
               {isAdmin && (
