@@ -119,9 +119,15 @@ model Rental {
   totalAmount     Int          // in cents
   depositAmount   Int          // in cents
   depositRefunded Boolean      @default(false)
-  shippingAddress Json?
-  stripePaymentId String?
-  notes           String?      @db.Text
+  shippingAddress              Json?
+  stripePaymentId              String?
+  notes                        String?      @db.Text
+  // DHL Express integration
+  dhlOutboundTrackingNumber    String?
+  dhlOutboundLabelUrl          String?
+  dhlReturnTrackingNumber      String?
+  dhlReturnLabelUrl            String?
+  dhlShipmentCreatedAt         DateTime?
   createdAt       DateTime     @default(now())
   updatedAt       DateTime     @updatedAt
 
