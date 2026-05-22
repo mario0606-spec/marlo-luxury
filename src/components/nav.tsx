@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { auth, signOut } from "@/lib/auth";
+import { auth } from "@/lib/auth";
+import { signOutAction } from "@/lib/auth-actions";
 import { LanguageToggle } from "@/components/language-toggle";
 
 export async function Nav() {
@@ -29,12 +30,7 @@ export async function Nav() {
               <Link href="/dashboard" className="text-stone-600 hover:text-stone-900">
                 Mein Konto
               </Link>
-              <form
-                action={async () => {
-                  "use server";
-                  await signOut({ redirectTo: "/" });
-                }}
-              >
+              <form action={signOutAction}>
                 <button
                   type="submit"
                   className="text-stone-600 hover:text-stone-900"

@@ -472,40 +472,79 @@ export async function sendReviewRequestEmail(email: string, data: ReviewRequestD
   });
 }
 
-interface ReviewRequestData {
+// ─── Dispatch & Purchase Offer Emails ──────────────────────────────────────
+
+interface DispatchEmailData {
   rentalId: string;
   itemName: string;
   brand: string;
-  reviewToken: string;
+  startDate: string;
+  endDate: string;
+  dispatchPhoto: string | null;
 }
 
-export async function sendReviewRequestEmail(email: string, data: ReviewRequestData) {
-  const reviewUrl = `${APP_URL}/reviews/${data.rentalId}?token=${data.reviewToken}`;
+export async function sendDispatchEmail(email: string, data: DispatchEmailData) {
+  const rentalUrl = `${APP_URL}/dashboard/rentals`;
+
+  const photoHtml = data.dispatchPhoto
+    ? `<img src="${data.dispatchPhoto}" alt="Dispatch condition" style="width:100%;max-width:560px;border:1px solid #e7e5e4;margin-top:16px;" />`
+    : "";
 
   await getResend().emails.send({
     from: FROM,
     to: email,
-    subject: `How was your experience with the ${data.brand} ${data.itemName}?`,
+    subject: `Ihr ${data.brand} ${data.itemName} ist unterwegs`,
     html: `
-      <div style="font-family:Georgia,serif;max-width:600px;margin:0 auto;padding:40px 20px;background:#fff;">
-        <h1 style="color:#1a1a1a;font-size:24px;margin-bottom:4px;">Marlo Luxury Rentals</h1>
-        <p style="color:#666;font-size:14px;margin-bottom:32px;">We hope you enjoyed your rental.</p>
+      <div style="font-family:Georgia,serif;max-width:600px;margin:0 auto;padding:40px 20px;background:#FAF7F2;color:#1C1C1C;">
+        <p style="font-size:11px;letter-spacing:4px;text-transform:uppercase;color:#C9A84C;margin-bottom:32px;">marianni</p>
+        <h1 style="font-size:22px;font-weight:300;margin-bottom:8px;">Ihre Uhr ist auf dem Weg.</h1>
+        <div style="border:1px solid #e7e5e4;padding:24px;margin:24px 0;">
+          <p style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#78716c;margin-bottom:12px;">${data.brand} ${data.itemName}</p>
+          <p style="font-size:14px;color:#57534e;margin:0;">Mietbeginn: ${data.startDate} — Rückgabe: ${data.endDate}</p>
+          ${photoHtml}
+        </div>
+        <a href="${rentalUrl}" style="display:inline-block;background:#1C1C1C;color:#fff;padding:14px 28px;text-decoration:none;font-size:12px;letter-spacing:2px;text-transform:uppercase;">Meine Miete ansehen</a>
+        <p style="color:#a8a29e;font-size:12px;margin-top:32px;">Referenz: ${data.rentalId}</p>
+      </div>
+    `,
+  });
+}
 
-        <h2 style="color:#1a1a1a;font-size:20px;font-weight:normal;margin-bottom:8px;">
-          How was the ${data.brand} ${data.itemName}?
-        </h2>
-        <p style="color:#57534e;font-size:14px;margin-bottom:24px;">
-          Your experience helps other members discover the right pieces. It takes less than a minute — just a star rating and a few words.
+interface PurchaseOfferData {
+  rentalId: string;
+  itemId: string;
+  itemName: string;
+  brand: string;
+  purchasePrice: number;
+  creditAmount: number;
+  finalPrice: number;
+  purchasable: boolean;
+}
+
+export async function sendPurchaseOfferEmail(email: string, data: PurchaseOfferData) {
+  const itemUrl = `${APP_URL}/catalog`;
+
+  await getResend().emails.send({
+    from: FROM,
+    to: email,
+    subject: `Möchten Sie Ihren ${data.brand} ${data.itemName} kaufen?`,
+    html: `
+      <div style="font-family:Georgia,serif;max-width:600px;margin:0 auto;padding:40px 20px;background:#FAF7F2;color:#1C1C1C;">
+        <p style="font-size:11px;letter-spacing:4px;text-transform:uppercase;color:#C9A84C;margin-bottom:32px;">marianni</p>
+        <h1 style="font-size:22px;font-weight:300;margin-bottom:8px;">Ein exklusives Angebot für Sie.</h1>
+        <p style="font-size:14px;color:#57534e;margin-bottom:24px;">
+          Sie haben die ${data.brand} ${data.itemName} bereits mehrfach gemietet. Als geschätztes Mitglied bieten wir Ihnen die Möglichkeit, diese Uhr zu erwerben.
         </p>
-
-        <a href="${reviewUrl}"
-           style="display:inline-block;background:#1a1a1a;color:#fff;padding:14px 28px;text-decoration:none;font-size:12px;letter-spacing:2px;text-transform:uppercase;">
-          LEAVE A REVIEW
-        </a>
-
-        <p style="color:#a8a29e;font-size:12px;margin-top:32px;">
-          This link is personal to you and expires in 30 days. Questions? Reply to this email.
-        </p>
+        ${data.purchasable ? `
+        <div style="border:1px solid #C9A84C;padding:24px;margin:24px 0;">
+          <p style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#78716c;margin-bottom:12px;">Ihr Angebot</p>
+          <p style="font-size:14px;color:#57534e;margin:4px 0;">Kaufpreis: €${data.purchasePrice.toLocaleString("de-DE")}</p>
+          <p style="font-size:14px;color:#57534e;margin:4px 0;">Mietguthaben: −€${data.creditAmount.toLocaleString("de-DE")}</p>
+          <p style="font-size:18px;font-weight:300;color:#1C1C1C;margin-top:12px;">Ihr Preis: €${data.finalPrice.toLocaleString("de-DE")}</p>
+        </div>
+        <a href="${itemUrl}" style="display:inline-block;background:#1C1C1C;color:#fff;padding:14px 28px;text-decoration:none;font-size:12px;letter-spacing:2px;text-transform:uppercase;">Angebot ansehen</a>
+        ` : `<p style="font-size:14px;color:#57534e;">Kontaktieren Sie uns, um mehr über einen Kauf zu erfahren.</p>`}
+        <p style="color:#a8a29e;font-size:12px;margin-top:32px;">Referenz: ${data.rentalId}</p>
       </div>
     `,
   });
