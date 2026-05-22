@@ -28,7 +28,7 @@ export async function PATCH(
   const rental = await prisma.rental.findUnique({
     where: { id },
     include: {
-      item: { select: { name: true, brand: true, slug: true, purchasable: true, purchasePrice: true } },
+      item: { select: { name: true, brand: true, slug: true, retailPrice: true } },
       user: { select: { email: true, name: true } },
       conditionLogs: { select: { phase: true, photos: true, status: true } },
     },
@@ -119,7 +119,7 @@ async function checkAndSendPurchaseOffer(
   userId: string,
   itemId: string,
   lastRentalAmount: number,
-  item: { name: string; brand: string; purchasable: boolean; purchasePrice: number | null },
+  item: { name: string; brand: string; retailPrice: number },
   email: string
 ) {
   // Count completed rentals by this user for this item (including the just-returned one)
@@ -148,7 +148,7 @@ async function checkAndSendPurchaseOffer(
     },
   });
 
-  const purchasePrice = item.purchasePrice ?? 0;
+  const purchasePrice = item.retailPrice;
   const finalPrice = Math.max(0, purchasePrice - lastRentalAmount);
 
   await sendPurchaseOfferEmail(email, {
@@ -159,7 +159,7 @@ async function checkAndSendPurchaseOffer(
     purchasePrice,
     creditAmount: lastRentalAmount,
     finalPrice,
-    purchasable: item.purchasable && purchasePrice > 0,
+    purchasable: purchasePrice > 0,
   });
 
   console.log(`Purchase offer sent for rental ${rentalId} (${completedCount} rentals of item ${itemId})`);
