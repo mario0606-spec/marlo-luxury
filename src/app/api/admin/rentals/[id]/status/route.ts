@@ -30,7 +30,7 @@ export async function PATCH(
     include: {
       item: { select: { name: true, brand: true, slug: true, retailPrice: true } },
       user: { select: { email: true, name: true } },
-      conditionLogs: { select: { phase: true, photos: true, status: true } },
+      conditionLogs: { select: { type: true, photos: true, assessment: true } },
     },
   });
   if (!rental) return NextResponse.json({ error: "Rental not found" }, { status: 404 });
@@ -51,7 +51,7 @@ export async function PATCH(
 
   // Gate: cannot mark ACTIVE (dispatched) without dispatch condition log with >=2 photos
   if (status === "ACTIVE") {
-    const dispatchLog = rental.conditionLogs.find((l) => l.phase === "DISPATCH");
+    const dispatchLog = rental.conditionLogs.find((l) => l.type === "DISPATCH");
     if (!dispatchLog || dispatchLog.photos.length < 2) {
       return NextResponse.json(
         { error: "Dispatch condition log with at least 2 photos is required before marking as dispatched." },
@@ -62,7 +62,7 @@ export async function PATCH(
 
   // Gate: cannot mark RETURNED without return condition log with >=2 photos
   if (status === "RETURNED") {
-    const returnLog = rental.conditionLogs.find((l) => l.phase === "RETURN");
+    const returnLog = rental.conditionLogs.find((l) => l.type === "RETURN");
     if (!returnLog || returnLog.photos.length < 2) {
       return NextResponse.json(
         { error: "Return condition log with at least 2 photos is required before marking as returned." },
@@ -78,7 +78,7 @@ export async function PATCH(
 
   // Send dispatch email when transitioning to ACTIVE
   if (status === "ACTIVE") {
-    const dispatchLog = rental.conditionLogs.find((l) => l.phase === "DISPATCH");
+    const dispatchLog = rental.conditionLogs.find((l) => l.type === "DISPATCH");
     try {
       await sendDispatchEmail(rental.user.email, {
         rentalId: id,
