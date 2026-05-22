@@ -18,7 +18,7 @@ export default async function CheckoutSuccessPage({ searchParams }: Props) {
         </div>
 
         <h1 className="text-2xl font-light tracking-wide mb-3">
-          {isSubscription ? "Welcome to Marlo" : "Payment Confirmed"}
+          {isSubscription ? "Willkommen bei marianni" : "Payment Confirmed"}
         </h1>
 
         <p className="text-stone-500 mb-10">

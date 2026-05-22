@@ -264,7 +264,7 @@ export default async function ItemDetailPage({ params }: PageProps) {
 
       <footer className="border-t border-stone-200 py-8 mt-16">
         <div className="max-w-6xl mx-auto px-4 text-center text-xs tracking-wider text-stone-400 uppercase">
-          © {new Date().getFullYear()} Marlo Luxury Rentals
+          © {new Date().getFullYear()} marianni
         </div>
       </footer>
     </div>

@@ -2,35 +2,37 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { SessionProvider } from "@/components/session-provider";
 import { CrispChat } from "@/components/crisp-chat";
+import { LangProvider } from "@/lib/lang-context";
 
 export const metadata: Metadata = {
   title: {
-    default: "Marlo — Wear Luxury. Pay Per Occasion.",
-    template: "%s | Marlo",
+    default: "marianni — Luxus tragen. Pro Anlass zahlen.",
+    template: "%s | marianni",
   },
   description:
-    "Rent luxury watches, jewelry, and accessories for any occasion. Flexible daily, weekly, or monthly rentals. Subscription plans available.",
+    "Luxusuhren und feinen Schmuck der renommiertesten Marken mieten — für jeden Anlass. Tagesmiete, Wochenmiete oder Monatsabonnement.",
   keywords: [
-    "luxury rentals",
-    "watch rental",
-    "jewelry rental",
-    "Rolex rental",
-    "Cartier rental",
-    "luxury accessories",
-    "luxury subscription",
+    "Luxus mieten",
+    "Uhren mieten",
+    "Schmuck mieten",
+    "Rolex mieten",
+    "Cartier mieten",
+    "Luxus Accessoires",
+    "Luxus Abonnement",
+    "DACH",
   ],
   openGraph: {
-    title: "Marlo — Wear Luxury. Pay Per Occasion.",
+    title: "marianni — Luxus tragen. Pro Anlass zahlen.",
     description:
-      "Rent iconic watches and fine jewelry from the world's finest brands. Starting from one occasion.",
+      "Leihe ikonische Uhren und feinen Schmuck der weltweit renommiertesten Marken. Ab einem Anlass.",
     type: "website",
-    siteName: "Marlo",
+    siteName: "marianni",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Marlo — Wear Luxury. Pay Per Occasion.",
+    title: "marianni — Luxus tragen. Pro Anlass zahlen.",
     description:
-      "Rent iconic watches and fine jewelry for any occasion. Subscription plans and one-time rentals available.",
+      "Luxusuhren und feinen Schmuck mieten für jeden Anlass. Abonnements und Einzelmieten verfügbar.",
   },
   robots: {
     index: true,
@@ -44,9 +46,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="scroll-smooth">
+    <html lang="de" className="scroll-smooth">
       <body>
-        <SessionProvider>{children}</SessionProvider>
+        <LangProvider>
+          <SessionProvider>{children}</SessionProvider>
+        </LangProvider>
         <CrispChat />
       </body>
     </html>

@@ -3,7 +3,7 @@ import Link from "next/link";
 
 export const metadata: Metadata = {
   title: "Privacy Policy",
-  description: "How Marlo Luxury Rentals collects, uses, and protects your personal information.",
+  description: "How marianni collects, uses, and protects your personal information.",
 };
 
 export default function PrivacyPage() {
@@ -15,7 +15,7 @@ export default function PrivacyPage() {
             href="/"
             className="text-xl tracking-[0.35em] font-light uppercase text-stone-900 hover:text-stone-700 transition-colors"
           >
-            Marlo
+            marianni
           </Link>
           <Link href="/" className="text-sm text-stone-500 hover:text-stone-900 transition-colors">
             ← Back
@@ -38,7 +38,7 @@ export default function PrivacyPage() {
               Overview
             </h2>
             <p>
-              Marlo Luxury Rentals (&ldquo;Marlo&rdquo;, &ldquo;we&rdquo;, &ldquo;us&rdquo;) is committed to
+              marianni (&ldquo;marianni&rdquo;, &ldquo;we&rdquo;, &ldquo;us&rdquo;) is committed to
               protecting your personal information. This policy explains what data we collect,
               how we use it, and your rights.
             </p>
@@ -105,7 +105,7 @@ export default function PrivacyPage() {
             </Link>
           </div>
           <p className="text-stone-400 text-xs mt-4">
-            &copy; {new Date().getFullYear()} Marlo Luxury Rentals
+            &copy; {new Date().getFullYear()} marianni
           </p>
         </div>
       </footer>

@@ -18,7 +18,7 @@ export default async function AdminLayout({
         <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
           <div className="flex items-center gap-8">
             <Link href="/" className="text-xl tracking-widest font-light uppercase">
-              Marlo
+              marianni
             </Link>
             <span className="text-xs tracking-widest uppercase text-stone-400 border border-stone-200 px-2 py-1">
               Admin

@@ -17,10 +17,10 @@ export async function sendVerificationEmail(email: string, token: string) {
   await getResend().emails.send({
     from: FROM,
     to: email,
-    subject: "Verify your Marlo account",
+    subject: "Verify your marianni account",
     html: `
       <div style="font-family:Georgia,serif;max-width:600px;margin:0 auto;padding:40px 20px;background:#fff;">
-        <h1 style="color:#1a1a1a;font-size:28px;margin-bottom:8px;">Marlo Luxury Rentals</h1>
+        <h1 style="color:#1a1a1a;font-size:28px;margin-bottom:8px;">marianni</h1>
         <p style="color:#666;font-size:14px;margin-bottom:32px;">Please verify your email address to activate your account.</p>
         <a href="${url}"
            style="display:inline-block;background:#1a1a1a;color:#fff;padding:14px 28px;text-decoration:none;font-size:14px;letter-spacing:1px;">
@@ -66,7 +66,7 @@ export async function sendBookingConfirmationEmail(email: string, data: BookingC
     subject: `Booking confirmed — ${data.itemName}`,
     html: `
       <div style="font-family:Georgia,serif;max-width:600px;margin:0 auto;padding:40px 20px;background:#fff;">
-        <h1 style="color:#1a1a1a;font-size:24px;margin-bottom:4px;">Marlo Luxury Rentals</h1>
+        <h1 style="color:#1a1a1a;font-size:24px;margin-bottom:4px;">marianni</h1>
         <p style="color:#666;font-size:14px;margin-bottom:32px;">Your booking is confirmed and pending payment.</p>
 
         <div style="border:1px solid #e7e5e4;padding:24px;margin-bottom:24px;">
@@ -119,7 +119,7 @@ export async function sendDispatchConditionEmail(email: string, data: DispatchCo
     subject: `Your ${data.brand} ${data.itemName} is on its way`,
     html: `
       <div style="font-family:Georgia,serif;max-width:600px;margin:0 auto;padding:40px 20px;background:#fff;">
-        <h1 style="color:#1a1a1a;font-size:24px;margin-bottom:4px;">Marlo Luxury Rentals</h1>
+        <h1 style="color:#1a1a1a;font-size:24px;margin-bottom:4px;">marianni</h1>
         <p style="color:#666;font-size:14px;margin-bottom:32px;">Your rental is on its way to you.</p>
 
         <div style="border:1px solid #e7e5e4;padding:24px;margin-bottom:24px;">
@@ -162,7 +162,7 @@ export async function sendDeliveryConfirmationEmail(email: string, data: Deliver
     subject: `Ihr ${data.brand} ${data.itemName} kommt heute an`,
     html: `
       <div style="font-family:Georgia,serif;max-width:600px;margin:0 auto;padding:40px 20px;background:#fff;">
-        <h1 style="color:#1a1a1a;font-size:24px;margin-bottom:4px;">Marlo Luxury Rentals</h1>
+        <h1 style="color:#1a1a1a;font-size:24px;margin-bottom:4px;">marianni</h1>
         <p style="color:#666;font-size:14px;margin-bottom:32px;">Ihr heutiges Paket ist auf dem Weg.</p>
 
         <div style="border:1px solid #e7e5e4;padding:24px;margin-bottom:24px;">
@@ -212,7 +212,7 @@ export async function sendMidRentalCheckInEmail(email: string, data: MidRentalCh
     subject: `Wie gefällt Ihnen die ${data.brand} ${data.itemName}?`,
     html: `
       <div style="font-family:Georgia,serif;max-width:600px;margin:0 auto;padding:40px 20px;background:#fff;">
-        <h1 style="color:#1a1a1a;font-size:24px;margin-bottom:4px;">Marlo Luxury Rentals</h1>
+        <h1 style="color:#1a1a1a;font-size:24px;margin-bottom:4px;">marianni</h1>
         <p style="color:#666;font-size:14px;margin-bottom:32px;">Wir hoffen, Sie genießen Ihre Miete.</p>
 
         <div style="border:1px solid #e7e5e4;padding:24px;margin-bottom:24px;">
@@ -270,7 +270,7 @@ export async function sendReturnReminderEmail(email: string, data: ReturnReminde
     subject: `Rückgabe in 2 Tagen — ${data.brand} ${data.itemName}`,
     html: `
       <div style="font-family:Georgia,serif;max-width:600px;margin:0 auto;padding:40px 20px;background:#fff;">
-        <h1 style="color:#1a1a1a;font-size:24px;margin-bottom:4px;">Marlo Luxury Rentals</h1>
+        <h1 style="color:#1a1a1a;font-size:24px;margin-bottom:4px;">marianni</h1>
         <p style="color:#666;font-size:14px;margin-bottom:32px;">Zeit, Abschied zu nehmen.</p>
 
         <div style="border:1px solid #e7e5e4;padding:24px;margin-bottom:24px;">
@@ -317,7 +317,7 @@ export async function sendReturnReceivedEmail(email: string, data: ReturnReceive
     subject: `Wir haben Ihre ${data.brand} ${data.itemName} erhalten`,
     html: `
       <div style="font-family:Georgia,serif;max-width:600px;margin:0 auto;padding:40px 20px;background:#fff;">
-        <h1 style="color:#1a1a1a;font-size:24px;margin-bottom:4px;">Marlo Luxury Rentals</h1>
+        <h1 style="color:#1a1a1a;font-size:24px;margin-bottom:4px;">marianni</h1>
         <p style="color:#666;font-size:14px;margin-bottom:32px;">Wir haben Ihre Rückgabe erhalten.</p>
 
         <div style="border:1px solid #e7e5e4;padding:24px;margin-bottom:24px;">
@@ -333,7 +333,7 @@ export async function sendReturnReceivedEmail(email: string, data: ReturnReceive
         </div>
 
         <p style="font-size:14px;color:#57534e;margin-bottom:24px;">
-          Wir freuen uns, Sie bald wieder bei Marlo begrüßen zu dürfen.
+          Wir freuen uns, Sie bald wieder bei marianni begrüßen zu dürfen.
         </p>
 
         <a href="${APP_URL}/catalog"
@@ -355,10 +355,10 @@ export async function sendPasswordResetEmail(email: string, token: string) {
   await getResend().emails.send({
     from: FROM,
     to: email,
-    subject: "Reset your Marlo password",
+    subject: "Reset your marianni password",
     html: `
       <div style="font-family:Georgia,serif;max-width:600px;margin:0 auto;padding:40px 20px;background:#fff;">
-        <h1 style="color:#1a1a1a;font-size:28px;margin-bottom:8px;">Marlo Luxury Rentals</h1>
+        <h1 style="color:#1a1a1a;font-size:28px;margin-bottom:8px;">marianni</h1>
         <p style="color:#666;font-size:14px;margin-bottom:32px;">You requested to reset your password.</p>
         <a href="${url}"
            style="display:inline-block;background:#1a1a1a;color:#fff;padding:14px 28px;text-decoration:none;font-size:14px;letter-spacing:1px;">

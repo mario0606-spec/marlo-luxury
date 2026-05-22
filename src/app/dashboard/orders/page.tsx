@@ -31,7 +31,7 @@ export default async function OrdersPage() {
     <div className="min-h-screen bg-stone-50">
       <nav className="border-b border-stone-200 bg-white">
         <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
-          <Link href="/" className="text-xl tracking-widest font-light uppercase">Marlo</Link>
+          <Link href="/" className="text-xl tracking-widest font-light uppercase">marianni</Link>
           <Link href="/dashboard" className="text-sm tracking-wider text-stone-500 hover:text-stone-900">
             ← Dashboard
           </Link>

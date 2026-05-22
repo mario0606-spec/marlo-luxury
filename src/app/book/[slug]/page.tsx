@@ -12,7 +12,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const { slug } = await params;
   const item = await prisma.item.findUnique({ where: { slug }, select: { name: true, brand: true } });
   if (!item) return { title: "Not Found" };
-  return { title: `Book ${item.name} — Marlo` };
+  return { title: `Book ${item.name} — marianni` };
 }
 
 export default async function BookPage({ params }: PageProps) {

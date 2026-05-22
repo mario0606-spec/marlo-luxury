@@ -138,7 +138,7 @@ export default async function CatalogPage({ searchParams }: PageProps) {
       <main className="max-w-6xl mx-auto px-4 py-12">
         <header className="mb-10">
           <p className="text-xs tracking-widest uppercase text-stone-400 mb-3">
-            Marlo Collection
+            marianni Collection
           </p>
           <h1 className="text-4xl font-light tracking-tight text-stone-900">
             Luxury Rentals
@@ -172,7 +172,7 @@ export default async function CatalogPage({ searchParams }: PageProps) {
 
       <footer className="border-t border-stone-200 py-8 mt-16">
         <div className="max-w-6xl mx-auto px-4 text-center text-xs tracking-wider text-stone-400 uppercase">
-          © {new Date().getFullYear()} Marlo Luxury Rentals
+          © {new Date().getFullYear()} marianni
         </div>
       </footer>
     </div>

@@ -3,7 +3,7 @@ import Link from "next/link";
 
 export const metadata: Metadata = {
   title: "Terms of Service",
-  description: "The terms and conditions governing use of Marlo Luxury Rentals.",
+  description: "The terms and conditions governing use of marianni.",
 };
 
 export default function TermsPage() {
@@ -15,7 +15,7 @@ export default function TermsPage() {
             href="/"
             className="text-xl tracking-[0.35em] font-light uppercase text-stone-900 hover:text-stone-700 transition-colors"
           >
-            Marlo
+            marianni
           </Link>
           <Link href="/" className="text-sm text-stone-500 hover:text-stone-900 transition-colors">
             ← Back
@@ -38,7 +38,7 @@ export default function TermsPage() {
               Overview
             </h2>
             <p>
-              By using Marlo Luxury Rentals (&ldquo;Marlo&rdquo;, &ldquo;we&rdquo;, &ldquo;us&rdquo;), you agree
+              By using marianni (&ldquo;marianni&rdquo;, &ldquo;we&rdquo;, &ldquo;us&rdquo;), you agree
               to these terms of service. Please read them carefully.
             </p>
             <p className="mt-3 text-stone-400 italic">
@@ -65,7 +65,7 @@ export default function TermsPage() {
             </h2>
             <p>
               You must be at least 18 years of age and provide valid identification to
-              rent from Marlo. We reserve the right to decline any rental request.
+              rent von marianni. We reserve the right to decline any rental request.
             </p>
           </section>
 
@@ -74,7 +74,7 @@ export default function TermsPage() {
               Liability
             </h2>
             <p>
-              Marlo is not liable for any loss, damage, or injury arising from the use of
+              marianni is not liable for any loss, damage, or injury arising from the use of
               rented items. All items are insured; customers are responsible for their
               care during the rental period.
             </p>
@@ -113,7 +113,7 @@ export default function TermsPage() {
             </Link>
           </div>
           <p className="text-stone-400 text-xs mt-4">
-            &copy; {new Date().getFullYear()} Marlo Luxury Rentals
+            &copy; {new Date().getFullYear()} marianni
           </p>
         </div>
       </footer>

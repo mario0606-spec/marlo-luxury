@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { auth, signOut } from "@/lib/auth";
+import { LanguageToggle } from "@/components/language-toggle";
 
 export async function Nav() {
   const session = await auth();
@@ -8,12 +9,12 @@ export async function Nav() {
   return (
     <nav className="border-b border-stone-200 bg-white sticky top-0 z-40">
       <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
-        <Link href="/" className="text-xl tracking-widest font-light uppercase">
-          Marlo
+        <Link href="/" className="text-xl tracking-widest font-light lowercase" aria-label="marianni home">
+          marianni
         </Link>
         <div className="flex items-center gap-6 text-sm tracking-wider uppercase">
           <Link href="/catalog" className="text-stone-600 hover:text-stone-900">
-            Collection
+            Kollektion
           </Link>
           {session ? (
             <>
@@ -23,7 +24,7 @@ export async function Nav() {
                 </Link>
               )}
               <Link href="/dashboard" className="text-stone-600 hover:text-stone-900">
-                My Account
+                Mein Konto
               </Link>
               <form
                 action={async () => {
@@ -35,20 +36,21 @@ export async function Nav() {
                   type="submit"
                   className="text-stone-600 hover:text-stone-900"
                 >
-                  Sign Out
+                  Abmelden
                 </button>
               </form>
             </>
           ) : (
             <>
               <Link href="/auth/signin" className="text-stone-600 hover:text-stone-900">
-                Sign In
+                Anmelden
               </Link>
               <Link href="/auth/signup" className="btn-primary py-2">
-                Join
+                Beitreten
               </Link>
             </>
           )}
+          <LanguageToggle />
         </div>
       </div>
     </nav>

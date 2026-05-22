@@ -6,7 +6,7 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { Nav } from "@/components/nav";
 
-export const metadata: Metadata = { title: "Booking Confirmed — Marlo" };
+export const metadata: Metadata = { title: "Booking Confirmed — marianni" };
 
 interface PageProps {
   params: Promise<{ id: string }>;

@@ -14,7 +14,7 @@ export default async function DashboardPage() {
       <nav className="border-b border-stone-200 bg-white">
         <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
           <Link href="/" className="text-xl tracking-widest font-light uppercase">
-            Marlo
+            marianni
           </Link>
           <div className="flex items-center gap-6">
             <span className="text-sm text-stone-500">{session.user.email}</span>

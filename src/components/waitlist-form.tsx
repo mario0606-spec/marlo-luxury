@@ -1,12 +1,40 @@
 "use client";
 
 import { useState } from "react";
+import { useLang } from "@/lib/lang-context";
 
 interface WaitlistFormProps {
   source?: string;
 }
 
+const t = {
+  de: {
+    label: "E-Mail-Adresse",
+    placeholder: "deine@email.com",
+    submit: "Warteliste beitreten",
+    submitting: "Wird eingetragen…",
+    successTitle: "Du bist dabei.",
+    successSub: "Wir melden uns, sobald wir starten.",
+    errorDefault: "Etwas ist schiefgelaufen. Bitte versuche es erneut.",
+    errorNetwork: "Netzwerkfehler. Bitte versuche es erneut.",
+    ariaForm: "Der marianni Warteliste beitreten",
+  },
+  en: {
+    label: "Email address",
+    placeholder: "your@email.com",
+    submit: "Join Waitlist",
+    submitting: "Joining…",
+    successTitle: "You're on the list.",
+    successSub: "We'll reach out when we launch.",
+    errorDefault: "Something went wrong. Please try again.",
+    errorNetwork: "Network error. Please try again.",
+    ariaForm: "Join the marianni waitlist",
+  },
+};
+
 export function WaitlistForm({ source = "homepage" }: WaitlistFormProps) {
+  const { lang } = useLang();
+  const c = t[lang];
   const [email, setEmail] = useState("");
   const [state, setState] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [errorMsg, setErrorMsg] = useState("");
@@ -29,11 +57,11 @@ export function WaitlistForm({ source = "homepage" }: WaitlistFormProps) {
         setState("success");
         setEmail("");
       } else {
-        setErrorMsg(data.error ?? "Something went wrong. Please try again.");
+        setErrorMsg(data.error ?? c.errorDefault);
         setState("error");
       }
     } catch {
-      setErrorMsg("Network error. Please try again.");
+      setErrorMsg(c.errorNetwork);
       setState("error");
     }
   }
@@ -48,10 +76,10 @@ export function WaitlistForm({ source = "homepage" }: WaitlistFormProps) {
           ✓
         </div>
         <p className="text-white text-lg font-light tracking-wide">
-          You&apos;re on the list.
+          {c.successTitle}
         </p>
         <p className="text-stone-400 text-sm mt-2">
-          We&apos;ll reach out when we launch.
+          {c.successSub}
         </p>
       </div>
     );
@@ -62,18 +90,18 @@ export function WaitlistForm({ source = "homepage" }: WaitlistFormProps) {
       <form
         onSubmit={handleSubmit}
         className="flex flex-col sm:flex-row gap-3 w-full max-w-md mx-auto"
-        aria-label="Join the Marlo waitlist"
+        aria-label={c.ariaForm}
         noValidate
       >
         <label htmlFor="waitlist-email" className="sr-only">
-          Email address
+          {c.label}
         </label>
         <input
           id="waitlist-email"
           type="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          placeholder="your@email.com"
+          placeholder={c.placeholder}
           className="flex-1 bg-white/8 border border-white/15 text-white placeholder-stone-500 px-5 py-3.5 focus:outline-none focus:border-gold-400 transition-colors text-sm tracking-wide"
           required
           disabled={state === "loading"}
@@ -85,7 +113,7 @@ export function WaitlistForm({ source = "homepage" }: WaitlistFormProps) {
           disabled={state === "loading"}
           className="bg-gold-500 hover:bg-gold-400 text-stone-900 px-7 py-3.5 text-xs font-medium tracking-widest uppercase transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap focus:outline-none focus:ring-2 focus:ring-gold-300"
         >
-          {state === "loading" ? "Joining…" : "Join Waitlist"}
+          {state === "loading" ? c.submitting : c.submit}
         </button>
       </form>
 

@@ -114,7 +114,7 @@ function AuthLayout({
   return (
     <div className="min-h-screen bg-stone-50 flex flex-col items-center justify-center px-4">
       <Link href="/" className="text-2xl tracking-widest font-light uppercase mb-12">
-        Marlo
+        marianni
       </Link>
       <div className="w-full max-w-md bg-white border border-stone-200 p-10">
         <h1 className="text-xl font-light tracking-wide mb-8 text-center">{title}</h1>
