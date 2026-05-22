@@ -72,12 +72,24 @@ async function ItemGrid({
         images: true,
         available: true,
         featured: true,
+        reviews: {
+          where: { status: "APPROVED" },
+          select: { rating: true },
+        },
       },
     }),
     prisma.item.count({ where }),
   ]);
 
   const totalPages = Math.ceil(total / PAGE_SIZE);
+
+  const itemsWithRating = items.map((item) => {
+    const { reviews, ...rest } = item;
+    const avgRating = reviews.length >= 3
+      ? reviews.reduce((s, r) => s + r.rating, 0) / reviews.length
+      : null;
+    return { ...rest, avgRating, reviewCount: reviews.length };
+  });
 
   if (items.length === 0) {
     return (
@@ -98,7 +110,7 @@ async function ItemGrid({
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {items.map((item) => (
+        {itemsWithRating.map((item) => (
           <ItemCard key={item.id} item={item} />
         ))}
       </div>

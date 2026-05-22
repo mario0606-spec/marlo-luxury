@@ -39,6 +39,15 @@ const CATEGORY_LABELS: Record<string, string> = {
   OTHER: "Other",
 };
 
+function StarDisplay({ rating }: { rating: number }) {
+  return (
+    <span className="text-stone-900">
+      {"★".repeat(rating)}
+      <span className="text-stone-300">{"★".repeat(5 - rating)}</span>
+    </span>
+  );
+}
+
 export default async function ItemDetailPage({ params }: PageProps) {
   const { slug } = await params;
   const session = await auth();
@@ -56,6 +65,16 @@ export default async function ItemDetailPage({ params }: PageProps) {
   });
 
   if (!item) notFound();
+
+  const reviews = await prisma.review.findMany({
+    where: { itemId: item.id, status: "APPROVED" },
+    include: { user: { select: { name: true } } },
+    orderBy: { createdAt: "desc" },
+  });
+
+  const avgRating = reviews.length >= 3
+    ? reviews.reduce((s, r) => s + r.rating, 0) / reviews.length
+    : null;
 
   const bookedRanges = item.rentals.map((r) => ({
     start: r.startDate.toISOString().split("T")[0],
@@ -140,6 +159,13 @@ export default async function ItemDetailPage({ params }: PageProps) {
             </h1>
             {item.referenceNumber && (
               <p className="text-xs text-stone-400 mb-6">Ref. {item.referenceNumber}</p>
+            )}
+
+            {avgRating !== null && (
+              <p className="text-sm text-stone-500 mb-4">
+                <span className="text-stone-900">{avgRating.toFixed(1)} ★</span>
+                {" — "}{reviews.length} rental{reviews.length !== 1 ? "s" : ""}
+              </p>
             )}
 
             <p className="text-stone-600 leading-relaxed mb-8">{item.description}</p>
@@ -260,6 +286,52 @@ export default async function ItemDetailPage({ params }: PageProps) {
             )}
           </div>
         </div>
+
+        {/* Reviews */}
+        <section className="mt-20">
+          <div className="flex items-baseline justify-between mb-8">
+            <h2 className="text-xl font-light tracking-tight text-stone-900">
+              {avgRating !== null
+                ? `${avgRating.toFixed(1)} ★ — ${reviews.length} rental${reviews.length !== 1 ? "s" : ""}`
+                : "Rental Reviews"}
+            </h2>
+          </div>
+
+          {reviews.length === 0 ? (
+            <div className="border border-stone-200 bg-white p-8 text-center">
+              <p className="text-stone-400 text-sm">Be the first to review this watch</p>
+            </div>
+          ) : reviews.length < 3 ? (
+            <div className="border border-stone-200 bg-white p-8 text-center">
+              <p className="text-stone-400 text-sm">Reviews coming soon — be the first to share your experience</p>
+            </div>
+          ) : (
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {reviews.map((review) => (
+                <div key={review.id} className="bg-white border border-stone-200 p-6">
+                  <div className="flex items-center gap-3 mb-3">
+                    <StarDisplay rating={review.rating} />
+                    {review.verifiedRental && (
+                      <span className="text-xs text-stone-400 border border-stone-200 px-2 py-0.5 tracking-wider uppercase">
+                        Verified Rental
+                      </span>
+                    )}
+                  </div>
+                  {review.occasion && (
+                    <p className="text-xs text-stone-400 tracking-wider uppercase mb-2">{review.occasion}</p>
+                  )}
+                  {review.body && (
+                    <p className="text-sm text-stone-600 leading-relaxed mb-4">{review.body}</p>
+                  )}
+                  <div className="flex items-center justify-between text-xs text-stone-400">
+                    <span>{review.user.name ?? "Anonymous"}</span>
+                    <span>{new Date(review.createdAt).toLocaleDateString("de-DE")}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
       </main>
 
       <footer className="border-t border-stone-200 py-8 mt-16">

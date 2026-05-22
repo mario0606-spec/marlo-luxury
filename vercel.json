@@ -6,6 +6,10 @@
     {
       "path": "/api/cron/rentals",
       "schedule": "0 7 * * *"
+    },
+    {
+      "path": "/api/cron/reviews",
+      "schedule": "0 10 * * *"
     }
   ]
 }
