@@ -19,19 +19,28 @@ model User {
   image           String?
   role             UserRole  @default(CUSTOMER)
   stripeCustomerId String?   @unique
+  kycStatus        KycStatus @default(UNVERIFIED)
+  kycSubmittedAt   DateTime?
+  kycFullName      String?
+  kycDateOfBirth   DateTime?
+  kycDocumentType  String?
+  kycDocumentNumber String?
+  stripeVerificationSessionId String? @unique
+  availabilityEmailOptOut Boolean   @default(false)
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
 
   onboardingCompleted Boolean   @default(false)
 
-  accounts        Account[]
-  sessions        Session[]
+  accounts           Account[]
+  sessions           Session[]
   verificationTokens VerificationToken[]
-  rentals         Rental[]
-  subscriptions   Subscription[]
-  orders          Order[]
-  preferences     UserPreferences?
-  reviews         Review[]
+  rentals            Rental[]
+  subscriptions      Subscription[]
+  orders             Order[]
+  preferences        UserPreferences?
+  reviews            Review[]
+  favorites          Favorite[]
 
   @@index([email])
 }
@@ -103,9 +112,11 @@ model Item {
   createdAt       DateTime    @default(now())
   updatedAt       DateTime    @updatedAt
 
-  rentals         Rental[]
-  orderItems      OrderItem[]
-  reviews         Review[]
+  rentals             Rental[]
+  orderItems          OrderItem[]
+  reviews             Review[]
+  purchaseConversions PurchaseConversion[]
+  favorites           Favorite[]
 
   @@index([category])
   @@index([available])
@@ -124,24 +135,35 @@ model Rental {
   totalAmount     Int          // in cents
   depositAmount   Int          // in cents
   depositRefunded Boolean      @default(false)
-  shippingAddress              Json?
-  stripePaymentId              String?
-  notes                        String?      @db.Text
-  // DHL Express integration
-  dhlOutboundTrackingNumber    String?
-  dhlOutboundLabelUrl          String?
-  dhlReturnTrackingNumber      String?
-  dhlReturnLabelUrl            String?
-  dhlShipmentCreatedAt         DateTime?
+  depositIntentId String?      // Stripe PaymentIntent ID for deposit hold
+  depositCaptured Boolean      @default(false)
+  depositCaptureAmount Int?    // in cents, for partial capture on damage
+  waiverPurchased Boolean      @default(false)
+  waiverAmount    Int?         // in cents (e.g. 1900 = €19)
+  shippingAddress Json?
+  stripePaymentId String?
+  notes           String?      @db.Text
+  // DHL Paket integration
+  dhlOutboundTrackingNumber String?
+  dhlOutboundLabelUrl       String?
+  dhlReturnTrackingNumber   String?
+  dhlReturnLabelUrl         String?
+  dhlShipmentCreatedAt      DateTime?
+  purchaseLeadSentAt        DateTime?
+  convertedToPurchaseAt     DateTime?
+  purchaseCreditAmount      Int?        // in cents, rental fee applied as credit
+  returnedAt                DateTime?
+  reviewRequestSentAt       DateTime?
   createdAt       DateTime     @default(now())
   updatedAt       DateTime     @updatedAt
 
   subscriptionId  String?
-  subscription    Subscription?  @relation(fields: [subscriptionId], references: [id])
+  subscription    Subscription?      @relation(fields: [subscriptionId], references: [id])
 
-  user            User           @relation(fields: [userId], references: [id])
-  item            Item           @relation(fields: [itemId], references: [id])
+  user            User               @relation(fields: [userId], references: [id])
+  item            Item               @relation(fields: [itemId], references: [id])
   conditionLogs   ConditionLog[]
+  purchaseConversion PurchaseConversion?
   review          Review?
 
   @@index([userId])
@@ -290,6 +312,26 @@ enum TokenType {
   PASSWORD_RESET
 }
 
+enum KycStatus {
+  UNVERIFIED
+  PENDING
+  VERIFIED
+  REJECTED
+}
+
+enum ReviewStatus {
+  PENDING
+  APPROVED
+  FLAGGED
+  REMOVED
+}
+
+enum PurchaseConversionStatus {
+  PENDING
+  PAID
+  CANCELLED
+}
+
 // ─── Onboarding Preferences ─────────────────────────────────────────────────
 
 model UserPreferences {
@@ -330,21 +372,21 @@ enum CaseSizePreference {
 // ─── Reviews ────────────────────────────────────────────────────────────────
 
 model Review {
-  id             String        @id @default(cuid())
+  id             String       @id @default(cuid())
   userId         String
   itemId         String
-  rentalId       String        @unique
+  rentalId       String       @unique
   rating         Int           // 1–5
-  body           String?       @db.Text
+  body           String?      @db.Text
   occasion       String?
-  verifiedRental Boolean       @default(true)
-  status         ReviewStatus  @default(APPROVED)
-  createdAt      DateTime      @default(now())
-  updatedAt      DateTime      @updatedAt
+  verifiedRental Boolean      @default(true)
+  status         ReviewStatus @default(APPROVED)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
 
-  user           User          @relation(fields: [userId], references: [id])
-  item           Item          @relation(fields: [itemId], references: [id])
-  rental         Rental        @relation(fields: [rentalId], references: [id])
+  user           User         @relation(fields: [userId], references: [id])
+  item           Item         @relation(fields: [itemId], references: [id])
+  rental         Rental       @relation(fields: [rentalId], references: [id])
 
   @@index([itemId])
   @@index([userId])
@@ -352,10 +394,27 @@ model Review {
   @@index([status])
 }
 
-enum ReviewStatus {
-  APPROVED
-  FLAGGED
-  REMOVED
+// ─── Purchase Conversions ─────────────────────────────────────────────────────
+
+model PurchaseConversion {
+  id              String                   @id @default(cuid())
+  rentalId        String                   @unique
+  itemId          String
+  userId          String
+  purchasePrice   Int                      // in cents (retail price at time of conversion)
+  creditApplied   Int                      // in cents (last rental fee credited)
+  finalAmount     Int                      // in cents (purchasePrice - creditApplied)
+  stripePaymentId String?
+  status          PurchaseConversionStatus @default(PENDING)
+  createdAt       DateTime                 @default(now())
+  updatedAt       DateTime                 @updatedAt
+
+  rental          Rental                   @relation(fields: [rentalId], references: [id])
+  item            Item                     @relation(fields: [itemId], references: [id])
+
+  @@index([userId])
+  @@index([itemId])
+  @@index([status])
 }
 
 // ─── Marketing ──────────────────────────────────────────────────────────────
@@ -369,4 +428,55 @@ model WaitlistEntry {
 
   @@index([email])
   @@index([createdAt])
+}
+
+// ─── Favorites / Wishlist ─────────────────────────────────────────────────────
+
+model Favorite {
+  id        String   @id @default(cuid())
+  userId    String
+  itemId    String
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  item      Item     @relation(fields: [itemId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, itemId])
+  @@index([userId])
+  @@index([itemId])
+}
+
+// ─── Founding Members ────────────────────────────────────────────────────────
+
+model FoundingMember {
+  id             String   @id @default(cuid())
+  email          String   @unique
+  firstName      String
+  referralCode   String   @unique
+  referralCount  Int      @default(0)
+  creditCents    Int      @default(0) // €50 = 5000 per successful referral
+  referredByCode String?              // referral code used at signup
+  confirmedAt    DateTime @default(now())
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  referralsGiven   Referral[] @relation("referrer")
+  referralReceived Referral?  @relation("referred")
+
+  @@index([email])
+  @@index([referralCode])
+}
+
+model Referral {
+  id            String   @id @default(cuid())
+  referrerId    String
+  referredId    String   @unique
+  creditApplied Boolean  @default(false)
+  creditCents   Int      @default(5000)
+  createdAt     DateTime @default(now())
+
+  referrer  FoundingMember @relation("referrer", fields: [referrerId], references: [id])
+  referred  FoundingMember @relation("referred", fields: [referredId], references: [id])
+
+  @@index([referrerId])
 }

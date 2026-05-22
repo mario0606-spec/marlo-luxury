@@ -22,7 +22,7 @@ const translations = {
       headline1: "Trage den",
       headline2: "Moment.",
       body: "Leihe ikonische Uhren der weltweit renommiertesten Marken — für Hochzeiten, Galas oder jeden Moment, der das Außergewöhnliche verdient.",
-      ctaPrimary: "Frühzugang sichern",
+      ctaPrimary: "Gründungsmitglied werden",
       ctaSecondary: "So funktioniert's",
       ariaLabel: "Hero — Trage den Moment",
     },
@@ -144,7 +144,7 @@ const translations = {
       headline1: "Wear the",
       headline2: "Moment.",
       body: "Rent iconic watches from the world's most prestigious brands — for a wedding, gala, or any moment that deserves the extraordinary.",
-      ctaPrimary: "Get Early Access",
+      ctaPrimary: "Become a Founding Member",
       ctaSecondary: "How It Works",
       ariaLabel: "Hero — Wear the Moment",
     },
@@ -309,7 +309,7 @@ export function LandingPage({ session }: LandingPageProps) {
                     {c.nav.signIn}
                   </Link>
                   <Link
-                    href="#waitlist"
+                    href="/gruendungsmitglied"
                     className="bg-gold-500 hover:bg-gold-400 text-stone-900 px-5 py-2 text-xs font-medium tracking-widest uppercase transition-colors focus:outline-none focus:ring-2 focus:ring-gold-300"
                   >
                     {c.nav.joinWaitlist}
@@ -351,7 +351,7 @@ export function LandingPage({ session }: LandingPageProps) {
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link
-              href="#waitlist"
+              href="/gruendungsmitglied"
               className="bg-gold-500 hover:bg-gold-400 text-stone-900 px-10 py-4 text-sm font-medium tracking-widest uppercase transition-colors w-full sm:w-auto text-center focus:outline-none focus:ring-2 focus:ring-gold-300"
             >
               {c.hero.ctaPrimary}

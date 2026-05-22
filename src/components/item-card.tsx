@@ -1,5 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
+import { FavoriteButton } from "@/components/favorite-button";
 
 interface ItemCardProps {
   item: {
@@ -15,6 +16,7 @@ interface ItemCardProps {
     avgRating?: number | null;
     reviewCount?: number;
   };
+  isFavorited?: boolean;
 }
 
 function formatPrice(cents: number) {
@@ -25,7 +27,7 @@ function formatPrice(cents: number) {
   }).format(cents / 100);
 }
 
-export function ItemCard({ item }: ItemCardProps) {
+export function ItemCard({ item, isFavorited }: ItemCardProps) {
   const image = item.images[0] ?? null;
   const showRating = item.avgRating != null;
 
@@ -53,6 +55,11 @@ export function ItemCard({ item }: ItemCardProps) {
             <span className="text-white text-xs tracking-widest uppercase">
               Unavailable
             </span>
+          </div>
+        )}
+        {isFavorited !== undefined && (
+          <div className="absolute top-3 right-3 bg-white/90 rounded-full p-1.5 shadow-sm">
+            <FavoriteButton itemId={item.id} initialFavorited={isFavorited} size="sm" />
           </div>
         )}
       </div>

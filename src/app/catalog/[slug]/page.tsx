@@ -4,6 +4,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { Nav } from "@/components/nav";
+import { FavoriteButton } from "@/components/favorite-button";
 import type { Metadata } from "next";
 
 interface PageProps {
@@ -51,18 +52,24 @@ function StarDisplay({ rating }: { rating: number }) {
 export default async function ItemDetailPage({ params }: PageProps) {
   const { slug } = await params;
   const session = await auth();
-  const isSignedIn = !!(session?.user as { id?: string } | undefined)?.id;
+  const userId = (session?.user as { id?: string } | undefined)?.id;
+  const isSignedIn = !!userId;
 
-  const item = await prisma.item.findUnique({
-    where: { slug },
-    include: {
-      rentals: {
-        where: { status: { in: ["CONFIRMED", "ACTIVE"] } },
-        select: { startDate: true, endDate: true },
-        orderBy: { startDate: "asc" },
+  const [item, favorite] = await Promise.all([
+    prisma.item.findUnique({
+      where: { slug },
+      include: {
+        rentals: {
+          where: { status: { in: ["CONFIRMED", "ACTIVE"] } },
+          select: { startDate: true, endDate: true },
+          orderBy: { startDate: "asc" },
+        },
       },
-    },
-  });
+    }),
+    userId
+      ? prisma.favorite.findFirst({ where: { userId, item: { slug } }, select: { id: true } })
+      : null,
+  ]);
 
   if (!item) notFound();
 
@@ -75,6 +82,8 @@ export default async function ItemDetailPage({ params }: PageProps) {
   const avgRating = reviews.length >= 3
     ? reviews.reduce((s, r) => s + r.rating, 0) / reviews.length
     : null;
+
+  const isFavorited = !!favorite;
 
   const bookedRanges = item.rentals.map((r) => ({
     start: r.startDate.toISOString().split("T")[0],
@@ -154,9 +163,14 @@ export default async function ItemDetailPage({ params }: PageProps) {
             <p className="text-sm tracking-widest uppercase text-stone-500 mb-2">
               {item.brand}
             </p>
-            <h1 className="text-3xl font-light tracking-tight text-stone-900 mb-2">
-              {item.name}
-            </h1>
+            <div className="flex items-start justify-between gap-4 mb-2">
+              <h1 className="text-3xl font-light tracking-tight text-stone-900">
+                {item.name}
+              </h1>
+              {isSignedIn && (
+                <FavoriteButton itemId={item.id} initialFavorited={isFavorited} />
+              )}
+            </div>
             {item.referenceNumber && (
               <p className="text-xs text-stone-400 mb-6">Ref. {item.referenceNumber}</p>
             )}
