@@ -18,13 +18,13 @@ const translations = {
       ariaNav: "Hauptnavigation",
     },
     hero: {
-      eyebrow: "Luxusuhren & Schmuck · Verleih-Marktplatz",
-      headline1: "Erlebe Luxus.",
-      headline2: "Pro Anlass zahlen.",
-      body: "Leihe ikonische Uhren und feinen Schmuck der weltweit renommiertesten Marken — für Hochzeiten, Galas oder jeden außergewöhnlichen Moment.",
+      eyebrow: "Luxusuhren · Verleih-Marktplatz",
+      headline1: "Trage den",
+      headline2: "Moment.",
+      body: "Leihe ikonische Uhren der weltweit renommiertesten Marken — für Hochzeiten, Galas oder jeden Moment, der das Außergewöhnliche verdient.",
       ctaPrimary: "Frühzugang sichern",
       ctaSecondary: "So funktioniert's",
-      ariaLabel: "Hero — Erlebe Luxus, pro Anlass zahlen",
+      ariaLabel: "Hero — Trage den Moment",
     },
     howItWorks: {
       eyebrow: "Das Erlebnis",
@@ -49,15 +49,12 @@ const translations = {
     },
     collection: {
       eyebrow: "Die Kollektion",
-      heading: "Ikonische Stücke für jeden Anlass",
+      heading: "Ikonische Uhren für jeden Anlass",
       watchesAria: "Luxusuhren Kollektion",
       watchesEyebrow: "Zeitmesser",
       watchesTitle: "Uhren",
-      jewelryAria: "Feinschmuck Kollektion",
-      jewelryEyebrow: "Feinschmuck",
-      jewelryTitle: "Schmuck",
       subEyebrow: "Abonnements",
-      subTitle: "Ein neues Luxusstück, jeden Monat",
+      subTitle: "Eine neue Uhr, jeden Monat",
       subBody: "Basic · Premium · VIP — kuratierte Auswahl, regelmäßig zu dir geliefert.",
       subCta: "Warteliste beitreten",
     },
@@ -106,13 +103,13 @@ const translations = {
     },
     waitlist: {
       eyebrow: "Frühzugang",
-      heading1: "Als Erstes",
-      heading2: "marianni erleben",
+      heading1: "Trage",
+      heading2: "deinen Moment.",
       body: "Wir starten bald. Melde dich auf der Warteliste an für Frühzugang, Gründungsmitglied-Preise und einen ersten Blick auf die Kollektion.",
       footnote: "Kein Spam. Jederzeit abmelden. Wir respektieren deine Privatsphäre.",
     },
     footer: {
-      tagline: "Luxusuhren und feiner Schmuck, zugänglich für jeden Anlass — Tagesmiete bis Monatsabonnement.",
+      tagline: "Luxusuhren zugänglich für jeden Anlass — Tagesmiete bis Monatsabonnement.",
       companyHeading: "Unternehmen",
       links: [
         { label: "So funktioniert's", href: "#how-it-works" },
@@ -143,13 +140,13 @@ const translations = {
       ariaNav: "Main navigation",
     },
     hero: {
-      eyebrow: "Luxury Watches & Jewelry · Rental Marketplace",
-      headline1: "Wear Luxury.",
-      headline2: "Pay Per Occasion.",
-      body: "Rent iconic watches and fine jewelry from the world's most prestigious brands — for a wedding, gala, or any moment that deserves the extraordinary.",
+      eyebrow: "Luxury Watches · Rental Marketplace",
+      headline1: "Wear the",
+      headline2: "Moment.",
+      body: "Rent iconic watches from the world's most prestigious brands — for a wedding, gala, or any moment that deserves the extraordinary.",
       ctaPrimary: "Get Early Access",
       ctaSecondary: "How It Works",
-      ariaLabel: "Hero — Wear Luxury, Pay Per Occasion",
+      ariaLabel: "Hero — Wear the Moment",
     },
     howItWorks: {
       eyebrow: "The Experience",
@@ -174,15 +171,12 @@ const translations = {
     },
     collection: {
       eyebrow: "The Collection",
-      heading: "Iconic Pieces, Every Occasion",
+      heading: "Iconic Watches, Every Occasion",
       watchesAria: "Luxury watches collection",
       watchesEyebrow: "Timepieces",
       watchesTitle: "Watches",
-      jewelryAria: "Fine jewelry collection",
-      jewelryEyebrow: "Fine Jewelry",
-      jewelryTitle: "Jewelry",
       subEyebrow: "Subscriptions",
-      subTitle: "A new luxury piece, every month",
+      subTitle: "A new watch, every month",
       subBody: "Basic · Premium · VIP — curated selections delivered to your door on a recurring basis.",
       subCta: "Join Waitlist",
     },
@@ -231,8 +225,8 @@ const translations = {
     },
     waitlist: {
       eyebrow: "Early Access",
-      heading1: "Be the First",
-      heading2: "to Wear marianni",
+      heading1: "Wear",
+      heading2: "your moment.",
       body: "We are launching soon. Join the waitlist for early access, founding member pricing, and a curated first look at the collection.",
       footnote: "No spam. Unsubscribe anytime. We respect your privacy.",
     },
@@ -268,10 +262,10 @@ export function LandingPage({ session }: LandingPageProps) {
   const c = translations[lang];
 
   return (
-    <main className="bg-stone-50 overflow-x-hidden">
+    <main className="bg-ivory overflow-x-hidden">
       {/* ── Navigation ───────────────────────────────────────────────────── */}
       <nav
-        className="fixed top-0 left-0 right-0 z-50 border-b border-white/10 bg-stone-900/95 backdrop-blur-sm"
+        className="fixed top-0 left-0 right-0 z-50 border-b border-white/10 bg-charcoal/95 backdrop-blur-sm"
         role="navigation"
         aria-label={c.nav.ariaNav}
       >
@@ -331,7 +325,7 @@ export function LandingPage({ session }: LandingPageProps) {
       {/* ── Hero ─────────────────────────────────────────────────────────── */}
       <section
         id="hero"
-        className="relative min-h-screen flex items-center justify-center bg-stone-900 overflow-hidden"
+        className="relative min-h-screen flex items-center justify-center bg-charcoal overflow-hidden"
         aria-label={c.hero.ariaLabel}
       >
         <div className="absolute inset-0 bg-gradient-to-br from-stone-900 via-stone-800/70 to-stone-950" />
@@ -345,10 +339,10 @@ export function LandingPage({ session }: LandingPageProps) {
             {c.hero.eyebrow}
           </p>
 
-          <h1 className="text-5xl sm:text-6xl lg:text-8xl font-light text-white tracking-tight leading-[1.04] mb-8">
+          <h1 className="font-display text-5xl sm:text-6xl lg:text-8xl font-light italic text-white tracking-tight leading-[1.04] mb-8">
             {c.hero.headline1}
             <br />
-            <span className="text-gold-400">{c.hero.headline2}</span>
+            <span className="text-gold-500">{c.hero.headline2}</span>
           </h1>
 
           <p className="text-stone-300/80 text-lg sm:text-xl max-w-2xl mx-auto mb-14 leading-relaxed font-light">
@@ -394,7 +388,7 @@ export function LandingPage({ session }: LandingPageProps) {
       {/* ── How It Works ─────────────────────────────────────────────────── */}
       <section
         id="how-it-works"
-        className="py-28 lg:py-36 bg-white"
+        className="py-28 lg:py-36 bg-ivory"
         aria-labelledby="how-it-works-heading"
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -404,7 +398,7 @@ export function LandingPage({ session }: LandingPageProps) {
             </p>
             <h2
               id="how-it-works-heading"
-              className="text-3xl sm:text-4xl lg:text-5xl font-light text-stone-900 tracking-tight"
+              className="font-display text-3xl sm:text-4xl lg:text-5xl font-light italic text-charcoal tracking-tight"
             >
               {c.howItWorks.heading}
             </h2>
@@ -432,7 +426,7 @@ export function LandingPage({ session }: LandingPageProps) {
       {/* ── Collection Showcase ──────────────────────────────────────────── */}
       <section
         id="collection"
-        className="py-28 lg:py-36 bg-stone-50"
+        className="py-28 lg:py-36 bg-cream/30"
         aria-labelledby="collection-heading"
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -442,16 +436,16 @@ export function LandingPage({ session }: LandingPageProps) {
             </p>
             <h2
               id="collection-heading"
-              className="text-3xl sm:text-4xl lg:text-5xl font-light text-stone-900 tracking-tight"
+              className="font-display text-3xl sm:text-4xl lg:text-5xl font-light italic text-charcoal tracking-tight"
             >
               {c.collection.heading}
             </h2>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+          <div className="grid grid-cols-1 gap-5">
             {/* Watches card */}
             <div
-              className="relative overflow-hidden bg-stone-900 aspect-[5/4] group"
+              className="relative overflow-hidden bg-charcoal aspect-[16/7] group"
               role="img"
               aria-label={c.collection.watchesAria}
             >
@@ -487,59 +481,10 @@ export function LandingPage({ session }: LandingPageProps) {
               </div>
             </div>
 
-            {/* Jewelry card */}
-            <div
-              className="relative overflow-hidden bg-stone-900 aspect-[5/4] group"
-              role="img"
-              aria-label={c.collection.jewelryAria}
-            >
-              <div className="absolute inset-0 bg-gradient-to-tl from-stone-800 via-stone-900 to-stone-950" />
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-52 h-52 bg-gold-400/7 rounded-full blur-3xl pointer-events-none" />
-              <div
-                className="absolute top-1/2 left-1/2 w-36 h-36 border border-gold-500/20 rotate-45"
-                style={{ marginTop: "-4.5rem", marginLeft: "-4.5rem" }}
-                aria-hidden="true"
-              />
-              <div
-                className="absolute top-1/2 left-1/2 w-24 h-24 border border-gold-500/12 rotate-45"
-                style={{ marginTop: "-3rem", marginLeft: "-3rem" }}
-                aria-hidden="true"
-              />
-              <div
-                className="absolute top-1/2 left-1/2 w-12 h-12 bg-gold-500/8 rotate-45"
-                style={{ marginTop: "-1.5rem", marginLeft: "-1.5rem" }}
-                aria-hidden="true"
-              />
-              <div
-                className="absolute top-1/2 left-1/2 w-48 h-px bg-gold-400/10"
-                style={{ marginTop: 0, marginLeft: "-6rem", transform: "rotate(45deg)" }}
-                aria-hidden="true"
-              />
-              <div
-                className="absolute top-1/2 left-1/2 w-48 h-px bg-gold-400/8"
-                style={{ marginTop: 0, marginLeft: "-6rem", transform: "rotate(-45deg)" }}
-                aria-hidden="true"
-              />
-              <div className="absolute inset-0 flex flex-col justify-end p-8 sm:p-10">
-                <p className="text-gold-400 text-[0.6rem] tracking-[0.4em] uppercase mb-3 font-light">
-                  {c.collection.jewelryEyebrow}
-                </p>
-                <h3 className="text-white text-2xl sm:text-3xl font-light tracking-wide mb-4">
-                  {c.collection.jewelryTitle}
-                </h3>
-                <div className="flex flex-wrap gap-x-4 gap-y-1">
-                  {["Cartier", "Van Cleef & Arpels", "Bulgari", "Tiffany & Co."].map((b) => (
-                    <span key={b} className="text-stone-400 text-xs tracking-wider">
-                      {b}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            </div>
           </div>
 
           {/* Subscription teaser */}
-          <div className="mt-5 bg-white border border-stone-200 p-8 sm:p-12">
+          <div className="mt-5 bg-ivory border border-cream p-8 sm:p-12">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
               <div>
                 <p className="text-gold-500 text-[0.65rem] tracking-[0.4em] uppercase mb-2 font-light">
@@ -606,7 +551,7 @@ export function LandingPage({ session }: LandingPageProps) {
 
       {/* ── Testimonials ─────────────────────────────────────────────────── */}
       <section
-        className="py-28 lg:py-36 bg-white"
+        className="py-28 lg:py-36 bg-ivory"
         aria-labelledby="testimonials-heading"
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -652,7 +597,7 @@ export function LandingPage({ session }: LandingPageProps) {
       {/* ── Waitlist CTA ─────────────────────────────────────────────────── */}
       <section
         id="waitlist"
-        className="relative py-32 lg:py-44 bg-stone-900 overflow-hidden"
+        className="relative py-32 lg:py-44 bg-charcoal overflow-hidden"
         aria-labelledby="waitlist-heading"
       >
         <div className="absolute inset-0 bg-gradient-to-br from-stone-900 via-stone-800/60 to-stone-950 pointer-events-none" />
@@ -664,7 +609,7 @@ export function LandingPage({ session }: LandingPageProps) {
           </p>
           <h2
             id="waitlist-heading"
-            className="text-4xl sm:text-5xl lg:text-6xl font-light text-white tracking-tight mb-6 leading-tight"
+            className="font-display text-4xl sm:text-5xl lg:text-6xl font-light italic text-ivory tracking-tight mb-6 leading-tight"
           >
             {c.waitlist.heading1}
             <br />
@@ -683,7 +628,7 @@ export function LandingPage({ session }: LandingPageProps) {
       </section>
 
       {/* ── Footer ───────────────────────────────────────────────────────── */}
-      <footer className="bg-stone-950 py-16 lg:py-20" role="contentinfo">
+      <footer className="bg-charcoal py-16 lg:py-20" role="contentinfo">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-10 mb-14">
             <div>
