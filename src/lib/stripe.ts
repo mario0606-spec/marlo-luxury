@@ -1,7 +1,7 @@
 import Stripe from "stripe";
 import { prisma } from "./prisma";
 
-export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
+export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY ?? "placeholder_key_not_set");
 
 export const SUBSCRIPTION_PLANS = {
   BASIC: {
