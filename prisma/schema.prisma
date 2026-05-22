@@ -22,12 +22,16 @@ model User {
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
 
+  onboardingCompleted Boolean   @default(false)
+
   accounts        Account[]
   sessions        Session[]
   verificationTokens VerificationToken[]
   rentals         Rental[]
   subscriptions   Subscription[]
   orders          Order[]
+  preferences     UserPreferences?
+  reviews         Review[]
 
   @@index([email])
 }
@@ -101,6 +105,7 @@ model Item {
 
   rentals         Rental[]
   orderItems      OrderItem[]
+  reviews         Review[]
 
   @@index([category])
   @@index([available])
@@ -131,14 +136,19 @@ model Rental {
   createdAt       DateTime     @default(now())
   updatedAt       DateTime     @updatedAt
 
+  subscriptionId  String?
+  subscription    Subscription?  @relation(fields: [subscriptionId], references: [id])
+
   user            User           @relation(fields: [userId], references: [id])
   item            Item           @relation(fields: [itemId], references: [id])
   conditionLogs   ConditionLog[]
+  review          Review?
 
   @@index([userId])
   @@index([itemId])
   @@index([status])
   @@index([startDate, endDate])
+  @@index([subscriptionId])
 }
 
 // ─── Condition Logs ─────────────────────────────────────────────────────────
@@ -176,6 +186,7 @@ model Subscription {
   updatedAt            DateTime           @updatedAt
 
   user                 User               @relation(fields: [userId], references: [id])
+  rentals              Rental[]
 
   @@index([userId])
   @@index([status])
@@ -277,6 +288,74 @@ enum OrderStatus {
 enum TokenType {
   EMAIL_VERIFICATION
   PASSWORD_RESET
+}
+
+// ─── Onboarding Preferences ─────────────────────────────────────────────────
+
+model UserPreferences {
+  id                String    @id @default(cuid())
+  userId            String    @unique
+  watchStyle        WatchStyle?
+  occasionFocus     OccasionFocus?
+  caseSizePreference CaseSizePreference?
+  familiarBrands    String[]  // e.g. ["Rolex","Omega","IWC"]
+  firstOccasion     String?   @db.Text
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+enum WatchStyle {
+  sports
+  dress
+  casual
+  mixed
+}
+
+enum OccasionFocus {
+  business
+  social_events
+  everyday
+  special_occasions
+}
+
+enum CaseSizePreference {
+  size_36_38
+  size_39_41
+  size_42_plus
+  no_preference
+}
+
+// ─── Reviews ────────────────────────────────────────────────────────────────
+
+model Review {
+  id             String        @id @default(cuid())
+  userId         String
+  itemId         String
+  rentalId       String        @unique
+  rating         Int           // 1–5
+  body           String?       @db.Text
+  occasion       String?
+  verifiedRental Boolean       @default(true)
+  status         ReviewStatus  @default(APPROVED)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  user           User          @relation(fields: [userId], references: [id])
+  item           Item          @relation(fields: [itemId], references: [id])
+  rental         Rental        @relation(fields: [rentalId], references: [id])
+
+  @@index([itemId])
+  @@index([userId])
+  @@index([rentalId])
+  @@index([status])
+}
+
+enum ReviewStatus {
+  APPROVED
+  FLAGGED
+  REMOVED
 }
 
 // ─── Marketing ──────────────────────────────────────────────────────────────
