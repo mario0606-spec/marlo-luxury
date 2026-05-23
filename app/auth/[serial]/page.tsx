@@ -18,7 +18,11 @@ export function generateMetadata({
   params: { serial: string };
 }): Metadata {
   const record = getAuthenticityBySerial(decodeURIComponent(params.serial));
-  if (!record) return {};
+  if (!record) {
+    return {
+      robots: { index: false, follow: false },
+    };
+  }
   return {
     title: `Authentifiziert: ${record.brand} ${record.model} — Marlo`,
     description: `Verifizierter Echtheitszertifikat für ${record.brand} ${record.model} Ref. ${record.referenceNumber}. Zertifikat ${record.certificateNumber}.`,
@@ -28,7 +32,7 @@ export function generateMetadata({
       url: `${BASE_URL}/auth/${record.serial}`,
       type: "website",
     },
-    robots: { index: false },
+    robots: { index: false, follow: false },
   };
 }
 
@@ -80,53 +84,67 @@ export default function VerificationPage({
 
   const latestCondition = record.conditionLog[record.conditionLog.length - 1];
   const authDate = new Date(record.authenticatedAt);
-  const verifyUrl = `${process.env.NEXT_PUBLIC_SITE_URL ?? "https://marianni.de"}/verify/${encodeURIComponent(record.serial)}`;
+  const verifyUrl = `${process.env.NEXT_PUBLIC_SITE_URL ?? "https://marianni.de"}/auth/${encodeURIComponent(record.serial)}`;
 
   return (
     <>
       <VerificationJsonLd record={record} />
 
       <main className="min-h-screen bg-marlo-cream">
-        <header className="border-b border-marlo-gold/20 px-6 py-4">
+        <header className="border-b border-marlo-gold/20 px-4 py-4 sm:px-6">
           <Link href="/" className="text-sm font-medium tracking-widest uppercase text-marlo-dark">
             Marlo
           </Link>
         </header>
 
-        <div className="max-w-2xl mx-auto px-6 py-12">
-          <div className="text-center mb-10">
-            <div className="inline-flex items-center gap-2 bg-emerald-50 border border-emerald-200 rounded-full px-4 py-2 mb-6">
-              <svg className="w-5 h-5 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <div className="max-w-2xl mx-auto px-4 py-8 sm:px-6 sm:py-12">
+          {/* Certificate number strip */}
+          <div className="text-center mb-6">
+            <span className="inline-block text-[11px] font-mono tabular-nums tracking-widest text-marlo-dark/40 uppercase">
+              {record.certificateNumber}
+            </span>
+          </div>
+
+          {/* Verified status banner */}
+          <div className="text-center mb-8 sm:mb-10">
+            <div className="inline-flex items-center gap-2 bg-marlo-gold/10 border border-marlo-gold/30 rounded-full px-4 py-2 mb-6 motion-safe:animate-[fadeSlideIn_0.5s_ease-out]">
+              <svg
+                className="w-5 h-5 text-marlo-gold motion-safe:animate-[shieldPop_0.6s_ease-out_0.2s_both]"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={2}
+              >
                 <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
               </svg>
-              <span className="text-sm font-medium text-emerald-800">Echtheit verifiziert</span>
+              <span className="text-sm font-medium text-marlo-dark">Echtheit verifiziert</span>
             </div>
-            <h1 className="text-2xl md:text-3xl font-medium">
+            <h1 className="text-2xl sm:text-3xl font-medium">
               {record.brand} {record.model}
             </h1>
-            <p className="mt-1 text-marlo-dark/50 text-sm">
+            <p className="mt-1 text-marlo-dark/50 text-sm font-mono tabular-nums">
               Ref. {record.referenceNumber}
             </p>
           </div>
 
           <div className="space-y-6">
-            <section className="bg-white border border-marlo-gold/20 rounded-lg p-6">
+            <section className="bg-white border border-marlo-gold/20 rounded-lg p-4 sm:p-6">
               <h2 className="text-xs uppercase tracking-widest text-marlo-gold mb-4">
                 Zertifikat
               </h2>
               <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-6">
-                <dl className="space-y-3 flex-1 min-w-0">
-                  <div className="flex justify-between">
+                <dl className="flex-1 min-w-0 divide-y divide-stone-100">
+                  <div className="flex justify-between py-2.5 first:pt-0">
                     <dt className="text-sm text-marlo-dark/60">Zertifikatsnummer</dt>
-                    <dd className="text-sm font-medium font-mono">{record.certificateNumber}</dd>
+                    <dd className="text-sm font-medium font-mono tabular-nums">{record.certificateNumber}</dd>
                   </div>
-                  <div className="flex justify-between">
+                  <div className="flex justify-between py-2.5">
                     <dt className="text-sm text-marlo-dark/60">Seriennummer</dt>
-                    <dd className="text-sm font-medium font-mono">{record.serial}</dd>
+                    <dd className="text-sm font-medium font-mono tabular-nums">{record.serial}</dd>
                   </div>
-                  <div className="flex justify-between">
+                  <div className="flex justify-between py-2.5">
                     <dt className="text-sm text-marlo-dark/60">Authentifiziert am</dt>
-                    <dd className="text-sm font-medium">
+                    <dd className="text-sm font-medium tabular-nums">
                       {authDate.toLocaleDateString("de-DE", {
                         day: "numeric",
                         month: "long",
@@ -134,7 +152,7 @@ export default function VerificationPage({
                       })}
                     </dd>
                   </div>
-                  <div className="flex justify-between">
+                  <div className="flex justify-between py-2.5 last:pb-0">
                     <dt className="text-sm text-marlo-dark/60">Uhrmacher</dt>
                     <dd className="text-sm font-medium">{record.watchmaker}</dd>
                   </div>
@@ -149,7 +167,7 @@ export default function VerificationPage({
             </section>
 
             {latestCondition && (
-              <section className="bg-white border border-marlo-gold/20 rounded-lg p-6">
+              <section className="bg-white border border-marlo-gold/20 rounded-lg p-4 sm:p-6">
                 <h2 className="text-xs uppercase tracking-widest text-marlo-gold mb-4">
                   Zustandsbericht
                 </h2>
@@ -161,7 +179,7 @@ export default function VerificationPage({
                     <p className="text-sm font-medium">
                       Zustand {latestCondition.grade}
                     </p>
-                    <p className="text-xs text-marlo-dark/50">
+                    <p className="text-xs text-marlo-dark/50 tabular-nums">
                       {new Date(latestCondition.date).toLocaleDateString("de-DE", {
                         day: "numeric",
                         month: "long",
@@ -179,7 +197,7 @@ export default function VerificationPage({
             )}
 
             {record.inspectionVideoUrl && (
-              <section className="bg-white border border-marlo-gold/20 rounded-lg p-6">
+              <section className="bg-white border border-marlo-gold/20 rounded-lg p-4 sm:p-6">
                 <h2 className="text-xs uppercase tracking-widest text-marlo-gold mb-4">
                   Inspektionsvideo
                 </h2>
@@ -199,7 +217,7 @@ export default function VerificationPage({
             )}
 
             {record.conditionLog.length > 1 && (
-              <section className="bg-white border border-marlo-gold/20 rounded-lg p-6">
+              <section className="bg-white border border-marlo-gold/20 rounded-lg p-4 sm:p-6">
                 <h2 className="text-xs uppercase tracking-widest text-marlo-gold mb-4">
                   Zustandsverlauf
                 </h2>
@@ -210,7 +228,7 @@ export default function VerificationPage({
                         {entry.grade}
                       </span>
                       <div>
-                        <p className="text-marlo-dark/60 text-xs">
+                        <p className="text-marlo-dark/60 text-xs tabular-nums">
                           {new Date(entry.date).toLocaleDateString("de-DE")} · {entry.inspectedBy}
                         </p>
                         <p className="text-marlo-dark/80">{entry.notes}</p>
@@ -222,11 +240,43 @@ export default function VerificationPage({
             )}
           </div>
 
-          <footer className="mt-10 text-center text-xs text-marlo-dark/40">
-            <p>Dieses Zertifikat wird von Marlo ausgestellt und kann jederzeit unter dieser URL verifiziert werden.</p>
+          {/* NFC trust note */}
+          <footer className="mt-8 sm:mt-10 text-center space-y-2">
+            <p className="text-xs text-marlo-dark/40">
+              Dieses Zertifikat wird von Marlo ausgestellt und kann jederzeit unter dieser URL verifiziert werden.
+            </p>
+            <p className="text-[11px] text-marlo-dark/30">
+              Auch per NFC am Uhrengehäuse abrufbar.
+            </p>
           </footer>
         </div>
       </main>
+
+      <style jsx global>{`
+        @keyframes fadeSlideIn {
+          from {
+            opacity: 0;
+            transform: translateY(8px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        @keyframes shieldPop {
+          0% {
+            opacity: 0;
+            transform: scale(0.6);
+          }
+          60% {
+            transform: scale(1.1);
+          }
+          100% {
+            opacity: 1;
+            transform: scale(1);
+          }
+        }
+      `}</style>
     </>
   );
 }
