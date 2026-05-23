@@ -5,6 +5,8 @@ import { editorialStories, getStoryById, getRelatedStories } from "@/lib/stories
 import { getBundleBySlug } from "@/lib/bundles";
 import type { OccasionBundle, StoryContentBlock } from "@/lib/types";
 import { StickyCta } from "./sticky-cta";
+import { Breadcrumbs } from "@/app/components/Breadcrumbs";
+import { BASE_URL, hreflangAlternates, truncate } from "@/lib/seo";
 
 export function generateStaticParams() {
   return editorialStories.map((s) => ({ storyId: s.id }));
@@ -17,9 +19,11 @@ export function generateMetadata({
 }): Metadata {
   const story = getStoryById(params.storyId);
   if (!story) return {};
+  const path = `/de/stories/${story.id}`;
   return {
-    title: `${story.title} — Marlo`,
-    description: story.excerpt,
+    title: truncate(`${story.title} — Marlo`, 60),
+    description: truncate(story.excerpt, 155),
+    alternates: hreflangAlternates(path),
   };
 }
 
@@ -132,7 +136,7 @@ function ContentBlock({
   }
 }
 
-function ArticleJsonLd({
+function StoryJsonLd({
   story,
   primaryBundle,
 }: {
@@ -146,9 +150,14 @@ function ArticleJsonLd({
     description: story.excerpt,
     author: { "@type": "Organization", name: story.author },
     datePublished: story.publishedAt,
+    mainEntityOfPage: {
+      "@type": "WebPage",
+      "@id": `${BASE_URL}/de/stories/${story.id}`,
+    },
     publisher: {
       "@type": "Organization",
       name: "Marlo Luxury Rentals",
+      url: BASE_URL,
     },
   };
 
@@ -164,9 +173,34 @@ function ArticleJsonLd({
           price: primaryBundle.priceEur,
           priceCurrency: "EUR",
           availability: "https://schema.org/InStock",
+          url: `${BASE_URL}/de/bundles/${primaryBundle.bundleSlug}`,
         },
       }
     : null;
+
+  const faqEntries = [
+    {
+      question: `Was kostet es, eine ${primaryBundle?.watchFamily ?? "Luxusuhr"} für eine ${story.occasion} zu mieten?`,
+      answer: primaryBundle
+        ? `Das ${primaryBundle.displayName}-Bundle kostet ${primaryBundle.priceEur} € für ${primaryBundle.durationDays} Tage, inklusive Versicherung, Concierge und Rückversand.`
+        : "Die Preise variieren je nach Uhr und Mietdauer. Alle Bundles sind inklusive Versicherung und Concierge.",
+    },
+    {
+      question: "Ist die Uhr versichert?",
+      answer:
+        "Ja, alle Marlo Occasion Bundles beinhalten eine Premium-Versicherung für die gesamte Mietdauer.",
+    },
+  ];
+
+  const faqLd = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: faqEntries.map((e) => ({
+      "@type": "Question",
+      name: e.question,
+      acceptedAnswer: { "@type": "Answer", text: e.answer },
+    })),
+  };
 
   return (
     <>
@@ -180,6 +214,10 @@ function ArticleJsonLd({
           dangerouslySetInnerHTML={{ __html: JSON.stringify(productLd) }}
         />
       )}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqLd) }}
+      />
     </>
   );
 }
@@ -203,9 +241,17 @@ export default function StoryPage({
 
   return (
     <>
-      <ArticleJsonLd story={story} primaryBundle={primaryBundle} />
+      <StoryJsonLd story={story} primaryBundle={primaryBundle} />
 
       <main className="min-h-screen pb-20 md:pb-0">
+        <Breadcrumbs
+          items={[
+            { name: "Marlo", href: "/de" },
+            { name: "Stories", href: "/de/stories" },
+            { name: story.title, href: `/de/stories/${story.id}` },
+          ]}
+        />
+
         <header className="border-b border-marlo-gold/20 px-6 py-6">
           <Link
             href="/de/bundles"
