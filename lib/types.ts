@@ -53,3 +53,26 @@ export interface EditorialStory {
   bundleSlugs: string[];
   contentBlocks: StoryContentBlock[];
 }
+
+export type WatchConditionGrade = "A+" | "A" | "B+" | "B";
+
+export interface ConditionEntry {
+  date: string;
+  grade: WatchConditionGrade;
+  notes: string;
+  inspectedBy: string;
+}
+
+export interface WatchAuthenticity {
+  id: string;
+  serial: string;
+  brand: string;
+  model: string;
+  referenceNumber: string;
+  watchmaker: string;
+  inspectionVideoUrl: string | null;
+  nfcUid: string | null;
+  conditionLog: ConditionEntry[];
+  authenticatedAt: string;
+  certificateNumber: string;
+}
