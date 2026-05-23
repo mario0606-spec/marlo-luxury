@@ -35,9 +35,21 @@ export interface Booking {
   createdAt: string;
 }
 
+export type StoryContentBlock =
+  | { type: "paragraph"; text: string }
+  | { type: "heading"; text: string }
+  | { type: "watch_cta"; bundleSlug: string }
+  | { type: "image"; alt: string; caption?: string };
+
 export interface EditorialStory {
   id: string;
   title: string;
   excerpt: string;
+  occasion: Occasion;
+  brand: string;
+  author: string;
+  publishedAt: string;
+  heroImageAlt: string;
   bundleSlugs: string[];
+  contentBlocks: StoryContentBlock[];
 }
