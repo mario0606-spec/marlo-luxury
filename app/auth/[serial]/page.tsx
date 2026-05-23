@@ -6,6 +6,7 @@ import {
   getAllAuthenticityRecords,
 } from "@/lib/authenticity";
 import { BASE_URL } from "@/lib/seo";
+import { CertificateQR } from "@/app/components/CertificateQR";
 
 export function generateStaticParams() {
   return getAllAuthenticityRecords().map((r) => ({ serial: r.serial }));
@@ -79,6 +80,7 @@ export default function VerificationPage({
 
   const latestCondition = record.conditionLog[record.conditionLog.length - 1];
   const authDate = new Date(record.authenticatedAt);
+  const verifyUrl = `${process.env.NEXT_PUBLIC_SITE_URL ?? "https://marianni.de"}/verify/${encodeURIComponent(record.serial)}`;
 
   return (
     <>
@@ -112,30 +114,38 @@ export default function VerificationPage({
               <h2 className="text-xs uppercase tracking-widest text-marlo-gold mb-4">
                 Zertifikat
               </h2>
-              <dl className="space-y-3">
-                <div className="flex justify-between">
-                  <dt className="text-sm text-marlo-dark/60">Zertifikatsnummer</dt>
-                  <dd className="text-sm font-medium font-mono">{record.certificateNumber}</dd>
+              <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-6">
+                <dl className="space-y-3 flex-1 min-w-0">
+                  <div className="flex justify-between">
+                    <dt className="text-sm text-marlo-dark/60">Zertifikatsnummer</dt>
+                    <dd className="text-sm font-medium font-mono">{record.certificateNumber}</dd>
+                  </div>
+                  <div className="flex justify-between">
+                    <dt className="text-sm text-marlo-dark/60">Seriennummer</dt>
+                    <dd className="text-sm font-medium font-mono">{record.serial}</dd>
+                  </div>
+                  <div className="flex justify-between">
+                    <dt className="text-sm text-marlo-dark/60">Authentifiziert am</dt>
+                    <dd className="text-sm font-medium">
+                      {authDate.toLocaleDateString("de-DE", {
+                        day: "numeric",
+                        month: "long",
+                        year: "numeric",
+                      })}
+                    </dd>
+                  </div>
+                  <div className="flex justify-between">
+                    <dt className="text-sm text-marlo-dark/60">Uhrmacher</dt>
+                    <dd className="text-sm font-medium">{record.watchmaker}</dd>
+                  </div>
+                </dl>
+                <div className="flex justify-center sm:justify-end shrink-0">
+                  <CertificateQR
+                    url={verifyUrl}
+                    label={`QR-Code zur Verifizierung von ${record.brand} ${record.model}`}
+                  />
                 </div>
-                <div className="flex justify-between">
-                  <dt className="text-sm text-marlo-dark/60">Seriennummer</dt>
-                  <dd className="text-sm font-medium font-mono">{record.serial}</dd>
-                </div>
-                <div className="flex justify-between">
-                  <dt className="text-sm text-marlo-dark/60">Authentifiziert am</dt>
-                  <dd className="text-sm font-medium">
-                    {authDate.toLocaleDateString("de-DE", {
-                      day: "numeric",
-                      month: "long",
-                      year: "numeric",
-                    })}
-                  </dd>
-                </div>
-                <div className="flex justify-between">
-                  <dt className="text-sm text-marlo-dark/60">Uhrmacher</dt>
-                  <dd className="text-sm font-medium">{record.watchmaker}</dd>
-                </div>
-              </dl>
+              </div>
             </section>
 
             {latestCondition && (
