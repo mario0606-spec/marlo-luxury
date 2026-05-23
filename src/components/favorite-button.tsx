@@ -9,8 +9,14 @@ interface FavoriteButtonProps {
   size?: "sm" | "md";
 }
 
-export function FavoriteButton({ itemId, initialFavorited, className = "", size = "md" }: FavoriteButtonProps) {
+export function FavoriteButton({
+  itemId,
+  initialFavorited,
+  className = "",
+  size = "md",
+}: FavoriteButtonProps) {
   const [favorited, setFavorited] = useState(initialFavorited);
+  const [popping, setPopping] = useState(false);
   const [isPending, startTransition] = useTransition();
 
   const toggle = () => {
@@ -18,7 +24,12 @@ export function FavoriteButton({ itemId, initialFavorited, className = "", size 
       const method = favorited ? "DELETE" : "POST";
       const res = await fetch(`/api/favorites/${itemId}`, { method });
       if (res.ok) {
-        setFavorited(!favorited);
+        const adding = !favorited;
+        setFavorited(adding);
+        if (adding) {
+          setPopping(true);
+          setTimeout(() => setPopping(false), 250);
+        }
       }
     });
   };
@@ -33,12 +44,12 @@ export function FavoriteButton({ itemId, initialFavorited, className = "", size 
         toggle();
       }}
       disabled={isPending}
-      aria-label={favorited ? "Remove from favorites" : "Add to favorites"}
-      className={`flex items-center justify-center rounded-full transition-colors ${
+      aria-label={favorited ? "Aus Favoriten entfernen" : "Zu Favoriten hinzufügen"}
+      className={`flex items-center justify-center min-w-[44px] min-h-[44px] rounded-full transition-colors ${
         favorited
           ? "text-rose-500 hover:text-rose-600"
           : "text-stone-300 hover:text-rose-400"
-      } disabled:opacity-50 ${className}`}
+      } disabled:opacity-50 active:scale-90 ${className}`}
     >
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -46,7 +57,7 @@ export function FavoriteButton({ itemId, initialFavorited, className = "", size 
         fill={favorited ? "currentColor" : "none"}
         stroke="currentColor"
         strokeWidth={favorited ? 0 : 1.5}
-        className={iconSize}
+        className={`${iconSize} transition-transform duration-200 ${popping ? "scale-125" : "scale-100"}`}
       >
         <path
           strokeLinecap="round"

@@ -18,6 +18,8 @@ interface ItemCardProps {
   averageRating?: number | null;
   reviewCount?: number;
   priority?: boolean;
+  availableFrom?: string | null;
+  showAvailableBadge?: boolean;
 }
 
 function formatPrice(cents: number) {
@@ -28,42 +30,106 @@ function formatPrice(cents: number) {
   }).format(cents / 100);
 }
 
-export function ItemCard({ item, isFavorited, averageRating, reviewCount, priority }: ItemCardProps) {
-  const image = item.images[0] ?? null;
+function formatDate(iso: string) {
+  return new Date(iso).toLocaleDateString("de-DE", {
+    day: "2-digit",
+    month: "2-digit",
+  });
+}
+
+function AvailabilityBadge({
+  available,
+  availableFrom,
+  showAvailableBadge,
+}: {
+  available: boolean;
+  availableFrom?: string | null;
+  showAvailableBadge?: boolean;
+}) {
+  if (available && !showAvailableBadge) return null;
+
+  let bg: string;
+  let label: string;
+
+  if (available) {
+    bg = "bg-emerald-700/90";
+    label = "Verfügbar";
+  } else if (availableFrom) {
+    bg = "bg-amber-600/90";
+    label = `Gebucht bis ${formatDate(availableFrom)}`;
+  } else {
+    bg = "bg-stone-700/90";
+    label = "Nicht verfügbar";
+  }
+
+  return (
+    <span
+      className={`absolute bottom-3 left-3 ${bg} text-white text-[10px] tracking-widest uppercase font-medium px-2.5 py-1 backdrop-blur-sm`}
+      style={{ maxWidth: "calc(100% - 24px)" }}
+    >
+      {label}
+    </span>
+  );
+}
+
+export function ItemCard({
+  item,
+  isFavorited,
+  averageRating,
+  reviewCount,
+  priority,
+  availableFrom,
+  showAvailableBadge,
+}: ItemCardProps) {
+  const image0 = item.images[0] ?? null;
+  const image1 = item.images.length >= 2 ? item.images[1] : null;
 
   return (
     <Link
       href={`/catalog/${item.slug}`}
-      className="group block bg-white border border-stone-200 hover:border-stone-400 transition-colors"
+      className="group block bg-white border border-stone-200 hover:border-stone-400 transition-colors active:opacity-80"
     >
       <div className="aspect-square bg-stone-100 overflow-hidden relative">
-        {image ? (
-          <Image
-            src={image}
-            alt={item.name}
-            fill
-            priority={priority}
-            className="object-cover group-hover:scale-105 transition-transform duration-500"
-            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-          />
+        {image0 ? (
+          <>
+            <Image
+              src={image0}
+              alt={item.name}
+              fill
+              priority={priority}
+              className="object-cover group-hover:scale-105 transition-transform duration-500"
+              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+            />
+            {image1 && (
+              <Image
+                src={image1}
+                alt=""
+                fill
+                className="object-cover opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                aria-hidden="true"
+              />
+            )}
+          </>
         ) : (
           <div className="w-full h-full flex items-center justify-center text-stone-500">
             <span className="text-xs tracking-widest uppercase">No image</span>
           </div>
         )}
-        {!item.available && (
-          <div className="absolute inset-0 bg-stone-900/60 flex items-center justify-center">
-            <span className="text-white text-xs tracking-widest uppercase">
-              Unavailable
-            </span>
-          </div>
-        )}
+
+        <AvailabilityBadge
+          available={item.available}
+          availableFrom={availableFrom}
+          showAvailableBadge={showAvailableBadge}
+        />
+
         {isFavorited !== undefined && (
-          <div className="absolute top-3 right-3 bg-white/90 rounded-full p-1.5 shadow-sm">
+          <div className="absolute top-3 right-3 bg-white/90 rounded-full shadow-sm">
             <FavoriteButton itemId={item.id} initialFavorited={isFavorited} size="sm" />
           </div>
         )}
       </div>
+
       <div className="p-5">
         <p className="text-xs tracking-widest uppercase text-stone-600 mb-1">
           {item.brand}
@@ -79,14 +145,21 @@ export function ItemCard({ item, isFavorited, averageRating, reviewCount, priori
         ) : (
           <div className="mb-3" />
         )}
-        <div className="flex items-baseline justify-between">
-          <span className="text-sm text-stone-900">
-            {formatPrice(item.dailyRate)}
-            <span className="text-xs text-stone-600 ml-1">/ day</span>
-          </span>
-          {item.weeklyRate && (
-            <span className="text-xs text-stone-600">
-              {formatPrice(item.weeklyRate)} / week
+        <div className="flex items-baseline gap-3">
+          {item.weeklyRate ? (
+            <>
+              <span className="text-sm text-stone-900">
+                {formatPrice(item.weeklyRate)}
+                <span className="text-xs text-stone-600 ml-1">/ Woche</span>
+              </span>
+              <span className="text-xs text-stone-500">
+                {formatPrice(item.dailyRate)} / Tag
+              </span>
+            </>
+          ) : (
+            <span className="text-sm text-stone-900">
+              {formatPrice(item.dailyRate)}
+              <span className="text-xs text-stone-600 ml-1">/ Tag</span>
             </span>
           )}
         </div>
