@@ -74,14 +74,16 @@ export default async function ConfirmationPage({ params }: Props) {
 
         <div className="bg-white border border-stone-200 mb-8">
           {rental.item.images[0] && (
-            <div className="relative aspect-[4/3] bg-stone-100">
-              <Image
-                src={rental.item.images[0]}
-                alt={rental.item.name}
-                fill
-                className="object-cover"
-                priority
-              />
+            <div className="flex justify-center py-8 bg-stone-50">
+              <div className="relative w-[160px] h-[160px]">
+                <Image
+                  src={rental.item.images[0]}
+                  alt={rental.item.name}
+                  fill
+                  className="object-cover"
+                  priority
+                />
+              </div>
             </div>
           )}
           <div className="p-8 text-center border-t border-stone-100">
