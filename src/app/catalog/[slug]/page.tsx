@@ -1,11 +1,15 @@
 import { notFound } from "next/navigation";
-import Image from "next/image";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { NavServer as Nav } from "@/components/nav-server";
 import { FavoriteButton } from "@/components/favorite-button";
 import { ReviewsSection } from "@/components/reviews-section";
+import { WatchGallery } from "@/components/watch-gallery";
+import { PricingAvailability } from "@/components/pricing-availability";
+import { TrustSignals } from "@/components/trust-signals";
+import { StickyMobileCTA } from "@/components/sticky-mobile-cta";
+import { RelatedWatches, type RelatedWatch } from "@/components/related-watches";
 import type { Metadata } from "next";
 
 interface PageProps {
@@ -41,6 +45,8 @@ const CATEGORY_LABELS: Record<string, string> = {
   OTHER: "Other",
 };
 
+const HERO_SENTINEL_ID = "watch-hero-cta-sentinel";
+
 export default async function ItemDetailPage({ params }: PageProps) {
   const { slug } = await params;
   const session = await auth();
@@ -70,6 +76,41 @@ export default async function ItemDetailPage({ params }: PageProps) {
 
   if (!item || item.category === "JEWELRY") notFound();
 
+  // Related watches: 2-tier query — same brand first, fall back to same category.
+  const sameBrand = await prisma.item.findMany({
+    where: {
+      id: { not: item.id },
+      category: item.category,
+      brand: item.brand,
+      available: true,
+    },
+    select: { id: true, slug: true, name: true, brand: true, dailyRate: true, images: true },
+    take: 6,
+    orderBy: { featured: "desc" },
+  });
+  let related = sameBrand;
+  if (related.length < 6) {
+    const fillers = await prisma.item.findMany({
+      where: {
+        id: { not: item.id, notIn: related.map((r) => r.id) },
+        category: item.category,
+        available: true,
+      },
+      select: { id: true, slug: true, name: true, brand: true, dailyRate: true, images: true },
+      take: 6 - related.length,
+      orderBy: { featured: "desc" },
+    });
+    related = [...related, ...fillers];
+  }
+  const relatedWatches: RelatedWatch[] = related.map((r) => ({
+    id: r.id,
+    slug: r.slug,
+    name: r.name,
+    brand: r.brand,
+    dailyRate: r.dailyRate,
+    images: r.images,
+  }));
+
   const isFavorited = !!favorite;
 
   const approvedReviews = reviews.map((r) => ({
@@ -92,81 +133,49 @@ export default async function ItemDetailPage({ params }: PageProps) {
     end: r.endDate.toISOString().split("T")[0],
   }));
 
+  const bookHref = isSignedIn
+    ? `/book/${item.slug}`
+    : `/auth/signin?callbackUrl=/book/${item.slug}`;
+
+  const itemCondition = (item as { condition?: string | null }).condition ?? null;
+
   return (
-    <div className="min-h-screen bg-stone-50">
+    <div className="min-h-screen bg-stone-50 pb-24 sm:pb-0">
       <Nav />
 
-      <main id="main-content" className="max-w-6xl mx-auto px-4 py-12">
+      <main id="main-content" className="max-w-6xl mx-auto px-4 py-8 sm:py-12">
         {/* Breadcrumb */}
-        <nav className="mb-8 flex items-center gap-2 text-xs tracking-widest uppercase text-stone-600">
-          <Link href="/catalog" className="hover:text-stone-600">
+        <nav className="mb-6 flex items-center gap-2 text-xs tracking-widest uppercase text-stone-600">
+          <Link href="/catalog" className="hover:text-stone-900">
             Collection
           </Link>
-          <span>/</span>
-          <span className="text-stone-600">{CATEGORY_LABELS[item.category] ?? item.category}</span>
+          <span className="text-stone-300">/</span>
+          <span className="text-stone-900">{CATEGORY_LABELS[item.category] ?? item.category}</span>
         </nav>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-          {/* Photo gallery */}
-          <div className="space-y-3">
-            {item.images.length > 0 ? (
-              <>
-                <div className="aspect-square bg-white border border-stone-200 overflow-hidden relative">
-                  <Image
-                    src={item.images[0]}
-                    alt={item.name}
-                    fill
-                    className="object-cover"
-                    sizes="(max-width: 1024px) 100vw, 50vw"
-                    priority
-                  />
-                </div>
-                {item.images.length > 1 && (
-                  <div className="grid grid-cols-4 gap-2">
-                    {item.images.slice(1).map((img, i) => (
-                      <div
-                        key={i}
-                        className="aspect-square bg-white border border-stone-200 overflow-hidden relative"
-                      >
-                        <Image
-                          src={img}
-                          alt={`${item.name} ${i + 2}`}
-                          fill
-                          className="object-cover"
-                          sizes="25vw"
-                        />
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </>
-            ) : (
-              <div className="aspect-square bg-white border border-stone-200 flex items-center justify-center">
-                <span className="text-xs tracking-widest uppercase text-stone-300">
-                  No image
-                </span>
-              </div>
-            )}
+        {/* Hero grid: sticky gallery + buy box */}
+        <div className="grid grid-cols-1 lg:grid-cols-[1.1fr_1fr] gap-8 lg:gap-12 items-start">
+          {/* Gallery — sticky on desktop */}
+          <div className="lg:sticky lg:top-24">
+            <WatchGallery images={item.images} alt={item.name} />
           </div>
 
-          {/* Details */}
+          {/* Buy box */}
           <div>
-            <div className="flex items-center gap-3 mb-2">
-              <span className="text-xs tracking-widest uppercase text-stone-600">
+            <div className="flex items-center gap-3 mb-3">
+              <span className="text-xs tracking-widest uppercase text-stone-500">
                 {CATEGORY_LABELS[item.category]}
               </span>
               {!item.available && (
-                <span className="text-xs tracking-widest uppercase text-red-400 border border-red-200 px-2 py-0.5">
+                <span className="text-[10px] tracking-widest uppercase text-red-600 border border-red-200 px-2 py-0.5">
                   Unavailable
                 </span>
               )}
             </div>
 
-            <p className="text-sm tracking-widest uppercase text-stone-500 mb-2">
-              {item.brand}
-            </p>
+            <p className="text-sm tracking-widest uppercase text-stone-500 mb-2">{item.brand}</p>
             <div className="flex items-start justify-between gap-4 mb-2">
-              <h1 className="text-3xl font-light tracking-tight text-stone-900">
+              <h1 className="text-3xl sm:text-4xl font-light tracking-tight text-stone-900 leading-tight">
                 {item.name}
               </h1>
               {isSignedIn && (
@@ -174,153 +183,123 @@ export default async function ItemDetailPage({ params }: PageProps) {
               )}
             </div>
             {item.referenceNumber && (
-              <p className="text-xs text-stone-600 mb-2">Ref. {item.referenceNumber}</p>
+              <p className="text-xs text-stone-500 mb-3">Ref. {item.referenceNumber}</p>
             )}
             {avgRating !== null && approvedReviews.length >= 3 ? (
-              <p className="text-sm text-amber-500 mb-6">
-                {"★".repeat(Math.round(avgRating))}{"☆".repeat(5 - Math.round(avgRating))}{" "}
-                <span className="text-stone-600 font-light">{avgRating.toFixed(1)}</span>
-                <span className="text-stone-600"> — {approvedReviews.length} rental{approvedReviews.length !== 1 ? "s" : ""}</span>
-              </p>
+              <a
+                href="#reviews"
+                className="inline-flex items-center gap-2 text-sm text-stone-700 mb-6 hover:text-stone-900"
+              >
+                <span className="text-amber-500" aria-hidden="true">
+                  {"★".repeat(Math.round(avgRating))}
+                  {"☆".repeat(5 - Math.round(avgRating))}
+                </span>
+                <span className="font-light">{avgRating.toFixed(1)}</span>
+                <span className="text-stone-500">· {approvedReviews.length} rentals</span>
+              </a>
             ) : (
-              <div className="mb-6" />
+              <div className="mb-4" />
             )}
 
-            <p className="text-stone-600 leading-relaxed mb-8">{item.description}</p>
+            <p className="text-stone-700 leading-relaxed mb-8">{item.description}</p>
 
-            {/* Pricing */}
-            <div className="border border-stone-200 bg-white p-6 mb-8">
-              <h2 className="text-xs tracking-widest uppercase text-stone-500 mb-4">
-                Rental Pricing
-              </h2>
-              <div className="space-y-3">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-stone-600">Daily rental</span>
-                  <span className="text-lg font-light text-stone-900">
-                    {formatEur(item.dailyRate)}
-                  </span>
-                </div>
-                {item.weeklyRate && (
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-stone-600">Weekly rental</span>
-                    <div className="text-right">
-                      <span className="text-lg font-light text-stone-900">
-                        {formatEur(item.weeklyRate)}
-                      </span>
-                      <span className="ml-2 text-xs text-stone-600">
-                        ({formatEur(Math.round(item.weeklyRate / 7))}/day)
-                      </span>
-                    </div>
-                  </div>
-                )}
-                {item.monthlyRate && (
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-stone-600">Monthly subscription</span>
-                    <div className="text-right">
-                      <span className="text-lg font-light text-stone-900">
-                        {formatEur(item.monthlyRate)}
-                      </span>
-                      <span className="ml-2 text-xs text-stone-600">/ month</span>
-                    </div>
-                  </div>
-                )}
-                <div className="pt-3 border-t border-stone-100 flex justify-between items-center">
-                  <span className="text-sm text-stone-500">Refundable deposit</span>
-                  <span className="text-sm text-stone-600">{formatEur(item.depositAmount)}</span>
-                </div>
-              </div>
+            {/* CTA */}
+            <div id={HERO_SENTINEL_ID} className="mb-6">
+              {item.available ? (
+                <Link href={bookHref} className="btn-primary w-full text-center block">
+                  Book This Piece
+                </Link>
+              ) : (
+                <button disabled className="btn-primary w-full opacity-40 cursor-not-allowed">
+                  Currently Unavailable
+                </button>
+              )}
+              {!isSignedIn && item.available && (
+                <p className="text-center text-xs text-stone-500 mt-2">
+                  Sign in or create an account to book
+                </p>
+              )}
+            </div>
 
-              <div className="mt-6 space-y-3">
-                {item.available ? (
-                  isSignedIn ? (
-                    <Link href={`/book/${item.slug}`} className="btn-primary w-full">
-                      Book This Piece
-                    </Link>
-                  ) : (
-                    <>
-                      <Link href={`/auth/signin?callbackUrl=/book/${item.slug}`} className="btn-primary w-full">
-                        Book This Piece
-                      </Link>
-                      <p className="text-center text-xs text-stone-600">
-                        Sign in or create an account to book
-                      </p>
-                    </>
-                  )
-                ) : (
-                  <button disabled className="btn-primary w-full opacity-40 cursor-not-allowed">
-                    Currently Unavailable
-                  </button>
-                )}
-              </div>
+            {/* Pricing + Availability */}
+            <div className="mb-6">
+              <PricingAvailability
+                dailyRate={item.dailyRate}
+                weeklyRate={item.weeklyRate}
+                monthlyRate={item.monthlyRate}
+                depositAmount={item.depositAmount}
+                bookedRanges={bookedRanges}
+                available={item.available}
+              />
+            </div>
+
+            {/* Trust signals */}
+            <div className="mb-6">
+              <TrustSignals condition={itemCondition} />
             </div>
 
             {/* Specs */}
             {(item.model || item.referenceNumber || item.retailPrice) && (
-              <div className="border border-stone-200 bg-white p-6 mb-8">
+              <div className="border border-stone-200 bg-white p-6">
                 <h2 className="text-xs tracking-widest uppercase text-stone-500 mb-4">
                   Specifications
                 </h2>
                 <dl className="space-y-2 text-sm">
-                  {item.brand && (
-                    <div className="flex justify-between">
-                      <dt className="text-stone-500">Brand</dt>
-                      <dd className="text-stone-900">{item.brand}</dd>
-                    </div>
-                  )}
-                  {item.model && (
-                    <div className="flex justify-between">
-                      <dt className="text-stone-500">Model</dt>
-                      <dd className="text-stone-900">{item.model}</dd>
-                    </div>
-                  )}
+                  <Spec label="Brand" value={item.brand} />
+                  {item.model && <Spec label="Model" value={item.model} />}
                   {item.referenceNumber && (
-                    <div className="flex justify-between">
-                      <dt className="text-stone-500">Reference</dt>
-                      <dd className="text-stone-900">{item.referenceNumber}</dd>
-                    </div>
+                    <Spec label="Reference" value={item.referenceNumber} />
                   )}
-                  <div className="flex justify-between">
-                    <dt className="text-stone-500">Retail value</dt>
-                    <dd className="text-stone-900">{formatEur(item.retailPrice)}</dd>
-                  </div>
+                  <Spec label="Retail value" value={formatEur(item.retailPrice)} />
                 </dl>
-              </div>
-            )}
-
-            {/* Booked dates */}
-            {bookedRanges.length > 0 && (
-              <div className="border border-stone-200 bg-white p-6">
-                <h2 className="text-xs tracking-widest uppercase text-stone-500 mb-4">
-                  Booked Dates
-                </h2>
-                <ul className="space-y-1 text-sm text-stone-600">
-                  {bookedRanges.map((r, i) => (
-                    <li key={i}>
-                      {r.start} — {r.end}
-                    </li>
-                  ))}
-                </ul>
               </div>
             )}
           </div>
         </div>
 
         {/* Reviews */}
-        <div className="mt-16">
+        <div id="reviews" className="mt-16">
           <ReviewsSection
             reviews={approvedReviews}
             averageRating={avgRating}
             totalReviews={approvedReviews.length}
             itemSlug={item.slug}
+            reviewCta={
+              isSignedIn ? { href: `/dashboard/rentals`, label: "Write a review →" } : null
+            }
           />
         </div>
+
+        {/* Related */}
+        {relatedWatches.length > 0 && (
+          <div className="mt-16">
+            <RelatedWatches watches={relatedWatches} />
+          </div>
+        )}
       </main>
 
       <footer className="border-t border-stone-200 py-8 mt-16">
-        <div className="max-w-6xl mx-auto px-4 text-center text-xs tracking-wider text-stone-600 uppercase">
+        <div className="max-w-6xl mx-auto px-4 text-center text-xs tracking-wider text-stone-500 uppercase">
           © {new Date().getFullYear()} Marlo Luxury Rentals
         </div>
       </footer>
+
+      <StickyMobileCTA
+        itemSlug={item.slug}
+        dailyRate={item.dailyRate}
+        available={item.available}
+        isSignedIn={isSignedIn}
+        sentinelId={HERO_SENTINEL_ID}
+      />
+    </div>
+  );
+}
+
+function Spec({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex justify-between">
+      <dt className="text-stone-500">{label}</dt>
+      <dd className="text-stone-900">{value}</dd>
     </div>
   );
 }

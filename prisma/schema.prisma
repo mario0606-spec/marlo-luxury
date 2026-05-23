@@ -108,6 +108,7 @@ model Item {
   featured        Boolean     @default(false)
   purchasable     Boolean     @default(false)
   purchasePrice   Int?        // in cents; null = not for sale
+  condition       String?     // MINT | VERY_GOOD | GOOD
   metadata        Json?
   createdAt       DateTime    @default(now())
   updatedAt       DateTime    @updatedAt
