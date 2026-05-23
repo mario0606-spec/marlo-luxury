@@ -46,7 +46,7 @@ const OCCASION_LABELS: Record<string, string> = {
   business: "business",
   social_events: "social",
   everyday: "everyday",
-  special_occasions: "special-occasion",
+  special_occasions: "special",
 };
 
 function matchReasonFor(

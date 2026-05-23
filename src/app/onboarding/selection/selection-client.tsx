@@ -35,7 +35,7 @@ const BLANK_ADDRESS: ShippingAddress = {
 
 const TRIO_LABELS = ["Our top pick", "Also recommended", ""] as const;
 
-export function SelectionClient({ watches, occasionNote: _occasionNote }: { watches: Watch[]; occasionNote: string }) {
+export function SelectionClient({ watches }: { watches: Watch[] }) {
   const router = useRouter();
   const [selected, setSelected] = useState<string | null>(null);
   const [step, setStep] = useState<"select" | "address">("select");
@@ -208,7 +208,7 @@ export function SelectionClient({ watches, occasionNote: _occasionNote }: { watc
                   <option value="AT">Austria</option>
                   <option value="CH">Switzerland</option>
                 </optgroup>
-                <optgroup label="European Union">
+                <optgroup label="Rest of Europe">
                   <option value="BE">Belgium</option>
                   <option value="CZ">Czech Republic</option>
                   <option value="DK">Denmark</option>
@@ -250,7 +250,7 @@ export function SelectionClient({ watches, occasionNote: _occasionNote }: { watc
           <div key={watch.id}>
             {TRIO_LABELS[index] && (
               <p className={`text-xs tracking-widest uppercase mb-2 ${
-                index === 0 ? "text-amber-600" : "text-stone-400"
+                index === 0 ? "text-gold-600" : "text-stone-400"
               }`}>
                 {TRIO_LABELS[index]}
               </p>
@@ -302,8 +302,8 @@ export function SelectionClient({ watches, occasionNote: _occasionNote }: { watc
               </div>
               {selected === watch.id && (
                 <div className="flex-shrink-0 self-center">
-                  <div className="w-5 h-5 border-2 border-amber-400 flex items-center justify-center">
-                    <div className="w-2 h-2 bg-amber-400" />
+                  <div className="w-5 h-5 border-2 border-gold-400 flex items-center justify-center">
+                    <div className="w-2 h-2 bg-gold-400" />
                   </div>
                 </div>
               )}

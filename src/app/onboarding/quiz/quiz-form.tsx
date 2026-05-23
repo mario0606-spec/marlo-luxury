@@ -181,8 +181,9 @@ export function QuizForm() {
     }
   }
 
-  async function handleSubmit() {
-    if (!form.watchStyle || !form.occasionFocus || !form.caseSizePreference) return;
+  async function handleSubmit(overrides?: Partial<FormState>) {
+    const payload = overrides ? { ...form, ...overrides } : form;
+    if (!payload.watchStyle || !payload.occasionFocus || !payload.caseSizePreference) return;
     setLoading(true);
     setError(null);
     try {
@@ -192,7 +193,7 @@ export function QuizForm() {
       const res = await fetch(url, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        body: JSON.stringify(payload),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Failed to save preferences");
@@ -209,8 +210,7 @@ export function QuizForm() {
   }
 
   function handleSkipStep4() {
-    setForm((f) => ({ ...f, brandFamiliarity: [] }));
-    handleSubmit();
+    handleSubmit({ brandFamiliarity: [] });
   }
 
   if (initializing) {
@@ -399,7 +399,7 @@ export function QuizForm() {
           ) : (
             <button
               type="button"
-              onClick={handleSubmit}
+              onClick={() => handleSubmit()}
               disabled={loading}
               className="btn-primary flex-1 py-4 min-h-[48px]"
             >

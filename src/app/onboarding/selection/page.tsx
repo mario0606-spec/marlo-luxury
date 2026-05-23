@@ -26,7 +26,7 @@ const OCCASION_LABELS: Record<string, string> = {
   business: "business",
   social_events: "social",
   everyday: "everyday",
-  special_occasions: "special-occasion",
+  special_occasions: "special",
 };
 
 function buildMatchReason(
@@ -134,7 +134,7 @@ export default async function OnboardingSelectionPage() {
           </div>
         )}
 
-        <SelectionClient watches={scored} occasionNote={prefs.occasionNote ?? ""} />
+        <SelectionClient watches={scored} />
       </main>
     </div>
   );
