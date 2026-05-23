@@ -7,6 +7,14 @@ import {
 } from "@/lib/authenticity";
 import { BASE_URL } from "@/lib/seo";
 import { CertificateQR } from "@/app/components/CertificateQR";
+import type { WatchConditionGrade } from "@/lib/types";
+
+const CONDITION_LABELS: Record<WatchConditionGrade, string> = {
+  "A+": "Neuwertig",
+  A: "Sehr gut",
+  "B+": "Gut",
+  B: "Gut",
+};
 
 export function generateStaticParams() {
   return getAllAuthenticityRecords().map((r) => ({ serial: r.serial }));
@@ -27,8 +35,8 @@ export function generateMetadata({
     title: `Authentifiziert: ${record.brand} ${record.model} — Marlo`,
     description: `Verifizierter Echtheitszertifikat für ${record.brand} ${record.model} Ref. ${record.referenceNumber}. Zertifikat ${record.certificateNumber}.`,
     openGraph: {
-      title: `Marlo Authenticated — ${record.brand} ${record.model}`,
-      description: `Verified by ${record.watchmaker}. Certificate ${record.certificateNumber}.`,
+      title: `marianni Authenticated — ${record.brand} ${record.model}`,
+      description: `Geprüft von ${record.watchmaker}. Zertifikat ${record.certificateNumber}.`,
       url: `${BASE_URL}/auth/${record.serial}`,
       type: "website",
     },
