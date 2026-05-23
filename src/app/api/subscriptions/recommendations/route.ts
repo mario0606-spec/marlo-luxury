@@ -50,17 +50,12 @@ const OCCASION_LABELS: Record<string, string> = {
 };
 
 function matchReasonFor(
-  item: { brand: string },
+  _item: { brand: string },
   prefs: { watchStyle: string; brandFamiliarity: string[]; occasionFocus: string },
 ): string {
-  if (prefs.brandFamiliarity.includes(item.brand)) {
-    return `A familiar name — chosen because you know ${item.brand}.`;
-  }
-  const styleBrands = STYLE_BRANDS[prefs.watchStyle] ?? [];
-  if (styleBrands.includes(item.brand)) {
-    return `Chosen for your ${STYLE_LABELS[prefs.watchStyle] ?? "personal"} taste.`;
-  }
-  return `Recommended for ${OCCASION_LABELS[prefs.occasionFocus] ?? "your"} wear.`;
+  const style = STYLE_LABELS[prefs.watchStyle] ?? "personal";
+  const occasion = OCCASION_LABELS[prefs.occasionFocus] ?? "your";
+  return `Chosen because: you prefer ${style} watches for ${occasion} occasions.`;
 }
 
 const OCCASION_NOTES: Record<string, string> = {
