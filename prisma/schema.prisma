@@ -110,6 +110,10 @@ model Item {
   purchasePrice   Int?        // in cents; null = not for sale
   condition       String?     // MINT | VERY_GOOD | GOOD
   metadata        Json?
+  images360       String[]
+  arModelGlb      String?
+  arModelUsdz     String?
+  arEnabled       Boolean     @default(false)
   createdAt       DateTime    @default(now())
   updatedAt       DateTime    @updatedAt
 
@@ -118,10 +122,34 @@ model Item {
   purchaseConversions PurchaseConversion[]
   favorites       Favorite[]
   reviews         Review[]
+  authenticity    WatchAuthenticity?
 
   @@index([category])
   @@index([available])
   @@index([slug])
+}
+
+// ─── Watch Authenticity ─────────────────────────────────────────────────────
+
+model WatchAuthenticity {
+  id                 String              @id @default(cuid())
+  itemId             String              @unique
+  serialNumber       String              @unique
+  watchmaker         String
+  inspectionVideoUrl String?
+  nfcUid             String?             @unique
+  conditionNotes     String?             @db.Text
+  authenticatedAt    DateTime            @default(now())
+  authenticatedBy    String
+  status             AuthenticityStatus  @default(VERIFIED)
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+
+  item               Item                @relation(fields: [itemId], references: [id], onDelete: Cascade)
+
+  @@index([serialNumber])
+  @@index([nfcUid])
+  @@index([itemId])
 }
 
 // ─── Rentals ────────────────────────────────────────────────────────────────
@@ -342,6 +370,12 @@ enum ConditionStatus {
   MINOR_WEAR
   DAMAGE
   MISSING_ITEM
+}
+
+enum AuthenticityStatus {
+  PENDING
+  VERIFIED
+  REVOKED
 }
 
 // ─── Subscription Onboarding ────────────────────────────────────────────────

@@ -5,7 +5,7 @@ import { auth } from "@/lib/auth";
 import { NavServer as Nav } from "@/components/nav-server";
 import { FavoriteButton } from "@/components/favorite-button";
 import { ReviewsSection } from "@/components/reviews-section";
-import { WatchGallery } from "@/components/watch-gallery";
+import { ImmersiveGallery } from "@/components/immersive-gallery";
 import { PricingAvailability } from "@/components/pricing-availability";
 import { TrustSignals } from "@/components/trust-signals";
 import { StickyMobileCTA } from "@/components/sticky-mobile-cta";
@@ -53,7 +53,7 @@ export default async function ItemDetailPage({ params }: PageProps) {
   const userId = (session?.user as { id?: string } | undefined)?.id;
   const isSignedIn = !!userId;
 
-  const [item, favorite, reviews] = await Promise.all([
+  const [item, favorite, reviews, authenticity] = await Promise.all([
     prisma.item.findUnique({
       where: { slug },
       include: {
@@ -71,6 +71,16 @@ export default async function ItemDetailPage({ params }: PageProps) {
       where: { item: { slug }, status: "APPROVED" },
       include: { user: { select: { name: true } } },
       orderBy: { createdAt: "desc" },
+    }),
+    prisma.watchAuthenticity.findFirst({
+      where: { item: { slug }, status: "VERIFIED" },
+      select: {
+        serialNumber: true,
+        watchmaker: true,
+        authenticatedBy: true,
+        inspectionVideoUrl: true,
+        nfcUid: true,
+      },
     }),
   ]);
 
@@ -139,6 +149,16 @@ export default async function ItemDetailPage({ params }: PageProps) {
 
   const itemCondition = (item as { condition?: string | null }).condition ?? null;
 
+  const authenticityData = authenticity
+    ? {
+        serialNumber: authenticity.serialNumber,
+        watchmaker: authenticity.watchmaker,
+        authenticatedBy: authenticity.authenticatedBy,
+        hasVideo: !!authenticity.inspectionVideoUrl,
+        hasNfc: !!authenticity.nfcUid,
+      }
+    : null;
+
   return (
     <div className="min-h-screen bg-stone-50 pb-24 sm:pb-0">
       <Nav />
@@ -157,7 +177,14 @@ export default async function ItemDetailPage({ params }: PageProps) {
         <div className="grid grid-cols-1 lg:grid-cols-[1.1fr_1fr] gap-8 lg:gap-12 items-start">
           {/* Gallery — sticky on desktop */}
           <div className="lg:sticky lg:top-24">
-            <WatchGallery images={item.images} alt={item.name} />
+            <ImmersiveGallery
+              images={item.images}
+              images360={item.images360}
+              arModelGlb={item.arModelGlb}
+              arModelUsdz={item.arModelUsdz}
+              arEnabled={item.arEnabled}
+              alt={item.name}
+            />
           </div>
 
           {/* Buy box */}
@@ -235,7 +262,7 @@ export default async function ItemDetailPage({ params }: PageProps) {
 
             {/* Trust signals */}
             <div className="mb-6">
-              <TrustSignals condition={itemCondition} />
+              <TrustSignals condition={itemCondition} authenticity={authenticityData} />
             </div>
 
             {/* Specs */}
