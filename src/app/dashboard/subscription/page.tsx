@@ -21,6 +21,21 @@ export default async function SubscriptionPage() {
     orderBy: { createdAt: "desc" },
   });
 
+  const preferences = await prisma.userPreferences.findUnique({ where: { userId } });
+
+  const styleLabel: Record<string, string> = {
+    dress: "Dress",
+    sports: "Sports",
+    casual: "Casual",
+    mixed: "Mixed",
+  };
+  const occasionLabel: Record<string, string> = {
+    business: "Business",
+    social_events: "Social events",
+    everyday: "Everyday",
+    special_occasions: "Special occasions",
+  };
+
   return (
     <div className="min-h-screen bg-stone-50">
       <nav className="border-b border-stone-200 bg-white">
@@ -76,6 +91,48 @@ export default async function SubscriptionPage() {
             </div>
 
             <SubscriptionActions mode="active" cancelAtPeriodEnd={subscription.cancelAtPeriodEnd} />
+
+            {preferences && (
+              <div className="border-t border-stone-100 mt-6 pt-6">
+                <div className="flex items-start justify-between mb-3">
+                  <p className="text-xs tracking-widest uppercase text-stone-500">
+                    Your preferences
+                  </p>
+                  <Link
+                    href="/onboarding/quiz?edit=true"
+                    className="text-xs tracking-widest uppercase text-stone-500 hover:text-stone-900"
+                  >
+                    Edit →
+                  </Link>
+                </div>
+                <div className="space-y-2 text-sm text-stone-600">
+                  <div className="flex justify-between">
+                    <span>Style</span>
+                    <span className="text-stone-900">
+                      {styleLabel[preferences.watchStyle] ?? preferences.watchStyle}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Occasion focus</span>
+                    <span className="text-stone-900">
+                      {occasionLabel[preferences.occasionFocus] ?? preferences.occasionFocus}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Case size</span>
+                    <span className="text-stone-900">{preferences.caseSizePreference}</span>
+                  </div>
+                  {preferences.brandFamiliarity.length > 0 && (
+                    <div className="flex justify-between gap-4">
+                      <span className="flex-shrink-0">Familiar brands</span>
+                      <span className="text-stone-900 text-right">
+                        {preferences.brandFamiliarity.join(", ")}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         ) : (
           <div>
