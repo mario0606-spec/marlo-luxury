@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
@@ -30,39 +30,29 @@ const BLANK_ADDRESS: ShippingAddress = {
   addressLine2: "",
   city: "",
   postalCode: "",
-  country: "",
+  country: "DE",
 };
 
-const COUNTRIES = [
-  "Germany",
-  "Austria",
-  "Switzerland",
-  "France",
-  "Italy",
-  "Spain",
-  "Netherlands",
-  "Belgium",
-  "Luxembourg",
-  "United Kingdom",
-  "Denmark",
-  "Sweden",
-  "Norway",
-  "Finland",
-  "Ireland",
-  "Portugal",
-  "Poland",
-  "Czech Republic",
-];
+const TRIO_LABELS = ["Our top pick", "Also recommended", ""] as const;
 
-export function SelectionClient({ watches }: { watches: Watch[] }) {
+export function SelectionClient({ watches, occasionNote: _occasionNote }: { watches: Watch[]; occasionNote: string }) {
   const router = useRouter();
   const [selected, setSelected] = useState<string | null>(null);
   const [step, setStep] = useState<"select" | "address">("select");
   const [address, setAddress] = useState<ShippingAddress>(BLANK_ADDRESS);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [ctaVisible, setCtaVisible] = useState(false);
 
   const selectedWatch = watches.find((w) => w.id === selected);
+
+  useEffect(() => {
+    if (selected) {
+      const t = setTimeout(() => setCtaVisible(true), 10);
+      return () => clearTimeout(t);
+    }
+    setCtaVisible(false);
+  }, [selected]);
 
   function handleAddressChange(field: keyof ShippingAddress, value: string) {
     setAddress((prev) => ({ ...prev, [field]: value }));
@@ -97,23 +87,31 @@ export function SelectionClient({ watches }: { watches: Watch[] }) {
   if (watches.length === 0) {
     return (
       <div className="bg-white border border-stone-200 p-10 text-center">
-        <p className="text-xs tracking-widest uppercase text-stone-500 mb-3">
-          Curated for you
-        </p>
+        <svg className="w-12 h-12 mx-auto mb-4" fill="none" stroke="currentColor" strokeWidth={1} viewBox="0 0 48 48">
+          <circle cx="24" cy="24" r="18" className="stroke-stone-900" />
+          <path d="M24 14v10l6 4" className="stroke-stone-900" strokeLinecap="round" strokeLinejoin="round" />
+          <path d="M24 6v2M24 40v2M6 24h2M40 24h2" className="stroke-stone-300" strokeLinecap="round" />
+        </svg>
         <h2 className="text-2xl font-light text-stone-900 mb-4">
-          We&rsquo;re hand-selecting your pieces.
+          Our collection is being curated for you.
         </h2>
         <p className="text-stone-500 leading-relaxed mb-8 max-w-md mx-auto">
-          Our concierge is curating a selection that fits your taste exactly.
-          You&rsquo;ll receive an email within 48 hours with three pieces
-          chosen for you.
+          Our concierge team will reach out within 24 hours to handpick your first timepiece personally.
         </p>
-        <Link
-          href="/dashboard"
-          className="inline-block px-8 py-4 bg-stone-900 text-white text-sm tracking-widest uppercase hover:bg-stone-800 transition-colors"
-        >
-          Return to dashboard
-        </Link>
+        <div className="flex flex-col gap-3">
+          <Link
+            href="/watches"
+            className="inline-block px-8 py-4 bg-stone-900 text-white text-sm tracking-widest uppercase hover:bg-stone-800 transition-colors"
+          >
+            Browse the full collection →
+          </Link>
+          <Link
+            href="/dashboard"
+            className="text-sm text-stone-500 underline text-center"
+          >
+            Return to dashboard
+          </Link>
+        </div>
       </div>
     );
   }
@@ -123,7 +121,7 @@ export function SelectionClient({ watches }: { watches: Watch[] }) {
       <div>
         <div className="bg-white border border-stone-200 p-6 mb-8 flex gap-5">
           {selectedWatch.images[0] && (
-            <div className="relative w-20 h-20 flex-shrink-0">
+            <div className="relative w-20 h-20 flex-shrink-0 bg-stone-50">
               <Image
                 src={selectedWatch.images[0]}
                 alt={selectedWatch.name}
@@ -205,10 +203,28 @@ export function SelectionClient({ watches }: { watches: Watch[] }) {
                 value={address.country}
                 onChange={(e) => handleAddressChange("country", e.target.value)}
               >
-                <option value="">Select a country</option>
-                {COUNTRIES.map((c) => (
-                  <option key={c} value={c}>{c}</option>
-                ))}
+                <optgroup label="DACH">
+                  <option value="DE">Germany</option>
+                  <option value="AT">Austria</option>
+                  <option value="CH">Switzerland</option>
+                </optgroup>
+                <optgroup label="European Union">
+                  <option value="BE">Belgium</option>
+                  <option value="CZ">Czech Republic</option>
+                  <option value="DK">Denmark</option>
+                  <option value="FI">Finland</option>
+                  <option value="FR">France</option>
+                  <option value="IE">Ireland</option>
+                  <option value="IT">Italy</option>
+                  <option value="LU">Luxembourg</option>
+                  <option value="NL">Netherlands</option>
+                  <option value="NO">Norway</option>
+                  <option value="PL">Poland</option>
+                  <option value="PT">Portugal</option>
+                  <option value="ES">Spain</option>
+                  <option value="SE">Sweden</option>
+                  <option value="GB">United Kingdom</option>
+                </optgroup>
               </select>
             </div>
           </div>
@@ -230,74 +246,86 @@ export function SelectionClient({ watches }: { watches: Watch[] }) {
   return (
     <div>
       <div className="space-y-4 mb-10">
-        {watches.map((watch) => (
-          <button
-            key={watch.id}
-            type="button"
-            onClick={() => setSelected(watch.id)}
-            className={`w-full text-left flex gap-5 p-6 min-h-[120px] border transition-all ${
-              selected === watch.id
-                ? "border-stone-900 bg-stone-900 text-white"
-                : "border-stone-200 bg-white hover:border-stone-400"
-            }`}
-          >
-            {watch.images[0] && (
-              <div className="relative w-24 h-24 flex-shrink-0">
-                <Image
-                  src={watch.images[0]}
-                  alt={watch.name}
-                  fill
-                  className="object-cover"
-                />
-              </div>
+        {watches.map((watch, index) => (
+          <div key={watch.id}>
+            {TRIO_LABELS[index] && (
+              <p className={`text-xs tracking-widest uppercase mb-2 ${
+                index === 0 ? "text-amber-600" : "text-stone-400"
+              }`}>
+                {TRIO_LABELS[index]}
+              </p>
             )}
-            <div className="flex-1">
-              <p
-                className={`text-xs tracking-widest uppercase mb-1 ${
-                  selected === watch.id ? "text-gold-400" : "text-stone-500"
-                }`}
-              >
-                {watch.brand}
-              </p>
-              <p
-                className={`text-lg font-light mb-2 ${
-                  selected === watch.id ? "text-white" : "text-stone-900"
-                }`}
-              >
-                {watch.name}
-              </p>
-              <p
-                className={`text-xs italic mb-3 ${
-                  selected === watch.id ? "text-gold-400" : "text-stone-600"
-                }`}
-              >
-                {watch.matchReason}
-              </p>
-              <p
-                className={`text-sm leading-relaxed ${
-                  selected === watch.id ? "text-stone-300" : "text-stone-500"
-                }`}
-                dangerouslySetInnerHTML={{ __html: watch.brandNote }}
-              />
-            </div>
-            {selected === watch.id && (
-              <div className="flex-shrink-0 self-center">
-                <div className="w-5 h-5 border-2 border-gold-400 flex items-center justify-center">
-                  <div className="w-2 h-2 bg-gold-400" />
+            <button
+              type="button"
+              onClick={() => setSelected(watch.id)}
+              className={`w-full text-left flex gap-5 p-6 min-h-[120px] border transition-all ${
+                selected === watch.id
+                  ? "border-stone-900 bg-stone-900 text-white"
+                  : "border-stone-200 bg-white hover:border-stone-400"
+              }`}
+            >
+              {watch.images[0] && (
+                <div className="relative w-24 h-24 flex-shrink-0 bg-stone-50">
+                  <Image
+                    src={watch.images[0]}
+                    alt={watch.name}
+                    fill
+                    className="object-cover"
+                  />
                 </div>
+              )}
+              <div className="flex-1">
+                <p
+                  className={`text-xs tracking-widest uppercase mb-1 ${
+                    selected === watch.id ? "text-stone-300" : "text-stone-500"
+                  }`}
+                >
+                  {watch.brand}
+                </p>
+                <p
+                  className={`text-lg font-light mb-2 ${
+                    selected === watch.id ? "text-white" : "text-stone-900"
+                  }`}
+                >
+                  {watch.name}
+                </p>
+                <p className="text-xs text-stone-500 italic mb-2">
+                  {watch.matchReason}
+                </p>
+                <p
+                  className={`text-sm leading-relaxed ${
+                    selected === watch.id ? "text-stone-300" : "text-stone-500"
+                  }`}
+                >
+                  {watch.brandNote}
+                </p>
               </div>
-            )}
-          </button>
+              {selected === watch.id && (
+                <div className="flex-shrink-0 self-center">
+                  <div className="w-5 h-5 border-2 border-amber-400 flex items-center justify-center">
+                    <div className="w-2 h-2 bg-amber-400" />
+                  </div>
+                </div>
+              )}
+            </button>
+          </div>
         ))}
       </div>
 
-      <button
-        disabled={!selected}
-        onClick={() => setStep("address")}
-        className="btn-primary w-full py-4 min-h-[48px] disabled:opacity-40"
-      >
-        {selected ? "Continue to delivery →" : "Select a watch to continue"}
-      </button>
+      {selected ? (
+        <button
+          onClick={() => setStep("address")}
+          className={`btn-primary w-full py-4 min-h-[48px] transition-all duration-150 ${
+            ctaVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-1"
+          }`}
+        >
+          Continue to delivery →
+        </button>
+      ) : (
+        <div className="w-full py-4 min-h-[48px] bg-transparent border border-stone-200 text-stone-400 cursor-default text-sm tracking-widest uppercase text-center">
+          Select a watch to continue
+        </div>
+      )}
     </div>
   );
 }

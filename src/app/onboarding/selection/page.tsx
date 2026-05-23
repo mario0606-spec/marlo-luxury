@@ -29,29 +29,20 @@ const OCCASION_LABELS: Record<string, string> = {
   special_occasions: "special-occasion",
 };
 
-const OCCASION_NOTES: Record<string, string> = {
-  business:
-    "A precise companion for boardrooms and business travel — understated authority on the wrist.",
-  social_events:
-    "Conversation at every turn — a watch that commands attention at the finest gatherings.",
-  everyday:
-    "Effortless versatility. Moves from morning coffee to evening plans without compromise.",
-  special_occasions:
-    "Wear a piece that marks the moment. A timepiece as memorable as the occasion itself.",
-};
-
 function buildMatchReason(
   item: { brand: string },
   prefs: { watchStyle: string; brandFamiliarity: string[]; occasionFocus: string },
 ): string {
+  const style = STYLE_LABELS[prefs.watchStyle] ?? "personal";
+  const occasion = OCCASION_LABELS[prefs.occasionFocus] ?? "your";
   if (prefs.brandFamiliarity.includes(item.brand)) {
-    return `A familiar name — chosen because you know ${item.brand}.`;
+    return `Chosen because: you prefer ${style} watches for ${occasion} occasions.`;
   }
   const styleBrands = STYLE_BRANDS[prefs.watchStyle] ?? [];
   if (styleBrands.includes(item.brand)) {
-    return `Chosen for your ${STYLE_LABELS[prefs.watchStyle] ?? "personal"} taste.`;
+    return `Chosen because: you prefer ${style} watches for ${occasion} occasions.`;
   }
-  return `Recommended for ${OCCASION_LABELS[prefs.occasionFocus] ?? "your"} wear.`;
+  return `Chosen because: you prefer ${style} watches for ${occasion} occasions.`;
 }
 
 export default async function OnboardingSelectionPage() {
@@ -81,7 +72,6 @@ export default async function OnboardingSelectionPage() {
     },
   });
 
-  // Score items
   function score(item: { brand: string; metadata: unknown }): number {
     let s = 0;
     if (prefs!.brandFamiliarity.includes(item.brand)) s += 3;
@@ -128,33 +118,23 @@ export default async function OnboardingSelectionPage() {
       </nav>
       <main className="max-w-2xl mx-auto px-4 py-12 md:py-20">
         <header className="mb-8">
-          <p className="text-xs tracking-widest uppercase text-stone-500 mb-3">
-            Curated for you
-          </p>
           <h1 className="text-3xl md:text-4xl font-light tracking-wide text-stone-900 mb-3">
             Three pieces. Chosen for you.
           </h1>
-          {OCCASION_NOTES[prefs.occasionFocus] && (
-            <p className="text-stone-500 leading-relaxed">
-              {OCCASION_NOTES[prefs.occasionFocus]}
-            </p>
-          )}
         </header>
 
-        <div className="bg-stone-100 border-l-2 border-stone-900 px-5 py-4 mb-10">
-          <p className="text-xs tracking-widest uppercase text-stone-500 mb-1">
-            Personalised for you
-          </p>
-          <p className="text-sm text-stone-700 leading-relaxed">
-            Based on your {STYLE_LABELS[prefs.watchStyle] ?? ""} taste
-            {prefs.brandFamiliarity.length > 0
-              ? ` and familiarity with ${prefs.brandFamiliarity.slice(0, 3).join(", ")}`
-              : ""}
-            .
-          </p>
-        </div>
+        {prefs.occasionNote && (
+          <div className="border-l-2 border-stone-900 pl-4 py-3 mb-8">
+            <p className="text-xs tracking-widest uppercase text-stone-500 mb-1">
+              CURATED FOR YOU
+            </p>
+            <p className="text-sm font-light text-stone-700 italic leading-relaxed">
+              {prefs.occasionNote}
+            </p>
+          </div>
+        )}
 
-        <SelectionClient watches={scored} />
+        <SelectionClient watches={scored} occasionNote={prefs.occasionNote ?? ""} />
       </main>
     </div>
   );

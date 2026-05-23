@@ -5,7 +5,7 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
 export const metadata = {
-  title: "Your watch is on its way — Marlo",
+  title: "Confirmed — Marlo",
 };
 
 interface Props {
@@ -29,20 +29,6 @@ export default async function ConfirmationPage({ params }: Props) {
 
   if (!rental || rental.userId !== userId) notFound();
 
-  const shipping = (rental.shippingAddress as {
-    fullName?: string;
-    addressLine1?: string;
-    addressLine2?: string;
-    city?: string;
-    postalCode?: string;
-    country?: string;
-  }) ?? {};
-
-  const estimatedDelivery = new Date(rental.startDate);
-  estimatedDelivery.setDate(estimatedDelivery.getDate() + 3);
-  const fmt = (d: Date) =>
-    d.toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" });
-
   return (
     <div className="min-h-screen bg-stone-50">
       <nav className="border-b border-stone-200 bg-white">
@@ -54,24 +40,38 @@ export default async function ConfirmationPage({ params }: Props) {
       </nav>
 
       <main className="max-w-2xl mx-auto px-4 py-12 md:py-20">
+        {/* §4.3 Confirmation mark — circle with centered diamond */}
         <div className="text-center mb-12">
-          <div className="w-14 h-14 mx-auto mb-6 flex items-center justify-center border border-stone-900">
-            <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 13l4 4L19 7" />
+          <div className="w-14 h-14 mx-auto mb-6 flex items-center justify-center">
+            <svg className="w-14 h-14" viewBox="0 0 56 56" fill="none">
+              <circle cx="28" cy="28" r="27" stroke="#292524" strokeWidth="1.5" />
+              <rect
+                x="28"
+                y="20"
+                width="8"
+                height="8"
+                transform="rotate(45 28 20)"
+                fill="#292524"
+              />
             </svg>
           </div>
           <p className="text-xs tracking-widest uppercase text-stone-500 mb-3">
             Confirmed
           </p>
-          <h1 className="text-3xl md:text-4xl font-light tracking-wide text-stone-900 mb-4">
-            Your watch is on its way.
+
+          {/* §4.4 Headline */}
+          <h1 className="text-2xl font-light text-stone-900 mb-2">
+            Your first watch is confirmed.
           </h1>
-          <p className="text-stone-500 leading-relaxed max-w-md mx-auto">
-            We&rsquo;re preparing your piece with care. You&rsquo;ll receive an email when
-            it ships.
+
+          {/* §4.4 Subtext with brand/name interpolation */}
+          <p className="text-sm font-light text-stone-600 mt-2 leading-relaxed max-w-md mx-auto">
+            We are preparing your {rental.item.brand} {rental.item.name} and
+            will notify you once it&rsquo;s on its way.
           </p>
         </div>
 
+        {/* Watch image card */}
         <div className="bg-white border border-stone-200 mb-8">
           {rental.item.images[0] && (
             <div className="flex justify-center py-8 bg-stone-50">
@@ -95,50 +95,53 @@ export default async function ConfirmationPage({ params }: Props) {
           </div>
         </div>
 
+        {/* §4.5 Dispatch timeline */}
         <div className="bg-white border border-stone-200 p-8 mb-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
-            <div>
-              <p className="text-xs tracking-widest uppercase text-stone-500 mb-2">
-                Estimated delivery
-              </p>
-              <p className="text-stone-900">{fmt(estimatedDelivery)}</p>
+          <p className="text-xs tracking-widest uppercase text-stone-500 mb-6">
+            What happens next
+          </p>
+          <div className="space-y-5">
+            <div className="flex items-center gap-4">
+              <svg className="w-5 h-5 flex-shrink-0 stroke-stone-400" viewBox="0 0 24 24" fill="none" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="9" />
+                <path d="M12 7v5l3 3" />
+              </svg>
+              <span className="text-sm font-light text-stone-700">Inspected and prepared for you</span>
+              <span className="text-xs text-stone-400 ml-auto">Within 24 hours</span>
             </div>
-            <div>
-              <p className="text-xs tracking-widest uppercase text-stone-500 mb-2">
-                Return by
-              </p>
-              <p className="text-stone-900">{fmt(rental.endDate)}</p>
+            <div className="flex items-center gap-4">
+              <svg className="w-5 h-5 flex-shrink-0 stroke-stone-400" viewBox="0 0 24 24" fill="none" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="7" width="18" height="13" rx="1" />
+                <path d="M3 7l9 6 9-6" />
+              </svg>
+              <span className="text-sm font-light text-stone-700">Dispatched by express courier</span>
+              <span className="text-xs text-stone-400 ml-auto">1–2 business days</span>
             </div>
-            <div className="md:col-span-2">
-              <p className="text-xs tracking-widest uppercase text-stone-500 mb-2">
-                Shipping to
-              </p>
-              <p className="text-stone-900">{shipping.fullName}</p>
-              <p className="text-stone-600">
-                {shipping.addressLine1}
-                {shipping.addressLine2 ? `, ${shipping.addressLine2}` : ""}
-              </p>
-              <p className="text-stone-600">
-                {shipping.postalCode} {shipping.city}, {shipping.country}
-              </p>
+            <div className="flex items-center gap-4">
+              <svg className="w-5 h-5 flex-shrink-0 stroke-stone-400" viewBox="0 0 24 24" fill="none" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="4" width="18" height="18" rx="2" />
+                <path d="M3 10h18" />
+                <path d="M16 2v4M8 2v4" />
+              </svg>
+              <span className="text-sm font-light text-stone-700">Your rental begins on arrival</span>
+              <span className="text-xs text-stone-400 ml-auto">Enjoy</span>
             </div>
           </div>
         </div>
 
-        <div className="flex flex-col gap-3">
-          <Link
-            href="/dashboard/rentals"
-            className="py-4 bg-stone-900 text-white text-sm tracking-widest uppercase text-center hover:bg-stone-800 transition-colors"
-          >
-            View my rentals
-          </Link>
-          <Link
-            href="/dashboard"
-            className="py-4 border border-stone-300 text-stone-600 text-sm tracking-widest uppercase text-center hover:border-stone-500 transition-colors"
-          >
-            Go to dashboard
-          </Link>
-        </div>
+        {/* §4.6 CTAs */}
+        <Link
+          href="/dashboard"
+          className="btn-primary w-full py-4 text-center block"
+        >
+          Go to my dashboard →
+        </Link>
+        <Link
+          href="/watches"
+          className="text-sm text-stone-500 underline text-center mt-3 block"
+        >
+          Explore the full collection
+        </Link>
       </main>
     </div>
   );

@@ -41,12 +41,85 @@ type FormState = {
 
 const STEP_LABELS = ["Style", "Occasion", "Size", "Brands"];
 
+function StyleIcon({ value, selected }: { value: string; selected: boolean }) {
+  const cls = `w-5 h-5 ${selected ? "text-stone-200" : "text-stone-400"}`;
+  switch (value) {
+    case "dress":
+      return (
+        <svg className={cls} viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth={1.5}>
+          <ellipse cx="10" cy="10" rx="4" ry="8" />
+        </svg>
+      );
+    case "sports":
+      return (
+        <svg className={cls} viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth={1.5}>
+          <path d="M4 16 A8 8 0 0 1 16 4" strokeLinecap="round" />
+          <path d="M10 2v3M18 10h-3" strokeLinecap="round" />
+        </svg>
+      );
+    case "casual":
+      return (
+        <svg className={cls} viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth={1.5}>
+          <circle cx="10" cy="10" r="7" />
+        </svg>
+      );
+    case "mixed":
+      return (
+        <svg className={cls} viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth={1.5}>
+          <circle cx="7" cy="7" r="1.5" fill="currentColor" />
+          <circle cx="13" cy="7" r="1.5" fill="currentColor" />
+          <circle cx="7" cy="13" r="1.5" fill="currentColor" />
+          <circle cx="13" cy="13" r="1.5" fill="currentColor" />
+        </svg>
+      );
+    default:
+      return null;
+  }
+}
+
+function OccasionIcon({ value, selected }: { value: string; selected: boolean }) {
+  const cls = `w-5 h-5 ${selected ? "text-stone-200" : "text-stone-400"}`;
+  switch (value) {
+    case "business":
+      return (
+        <svg className={cls} viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth={1.5}>
+          <rect x="3" y="7" width="14" height="10" rx="1" />
+          <path d="M7 7V5a3 3 0 0 1 6 0v2" />
+        </svg>
+      );
+    case "social_events":
+      return (
+        <svg className={cls} viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth={1.5}>
+          <path d="M7 18l3-8 3 8" strokeLinecap="round" strokeLinejoin="round" />
+          <path d="M10 10V7" strokeLinecap="round" />
+          <circle cx="10" cy="5" r="2" />
+        </svg>
+      );
+    case "everyday":
+      return (
+        <svg className={cls} viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth={1.5}>
+          <path d="M2 14h16" strokeLinecap="round" />
+          <path d="M4 14c0-3 2.5-6 6-6s6 3 6 6" />
+        </svg>
+      );
+    case "special_occasions":
+      return (
+        <svg className={cls} viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth={1.5}>
+          <path d="M10 2l3 6-3 6-3-6z" strokeLinejoin="round" />
+        </svg>
+      );
+    default:
+      return null;
+  }
+}
+
 export function QuizForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const isEdit = searchParams.get("edit") === "true";
 
   const [step, setStep] = useState(1);
+  const [direction, setDirection] = useState<"forward" | "back">("forward");
   const [form, setForm] = useState<FormState>({
     watchStyle: "",
     occasionFocus: "",
@@ -58,7 +131,6 @@ export function QuizForm() {
   const [initializing, setInitializing] = useState(isEdit);
   const [error, setError] = useState<string | null>(null);
 
-  // Pre-fill from existing preferences when editing
   useEffect(() => {
     if (!isEdit) return;
     fetch("/api/subscriptions/preferences")
@@ -74,7 +146,7 @@ export function QuizForm() {
           });
         }
       })
-      .catch(() => { /* non-blocking */ })
+      .catch(() => {})
       .finally(() => setInitializing(false));
   }, [isEdit]);
 
@@ -96,11 +168,17 @@ export function QuizForm() {
 
   function next() {
     if (!canAdvance()) return;
-    if (step < 4) setStep(step + 1);
+    if (step < 4) {
+      setDirection("forward");
+      setStep(step + 1);
+    }
   }
 
   function back() {
-    if (step > 1) setStep(step - 1);
+    if (step > 1) {
+      setDirection("back");
+      setStep(step - 1);
+    }
   }
 
   async function handleSubmit() {
@@ -118,30 +196,36 @@ export function QuizForm() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Failed to save preferences");
-      router.push(isEdit ? "/dashboard/subscription" : "/onboarding/selection");
+
+      if (isEdit) {
+        router.push("/dashboard/subscription?toast=preferences-updated");
+      } else {
+        router.push("/onboarding/selection");
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
       setLoading(false);
     }
   }
 
+  function handleSkipStep4() {
+    setForm((f) => ({ ...f, brandFamiliarity: [] }));
+    handleSubmit();
+  }
+
   if (initializing) {
     return (
       <div className="py-20 text-center text-sm tracking-widest uppercase text-stone-400">
-        Loading your preferences…
+        Preparing your selection…
       </div>
     );
   }
 
   return (
     <div>
-      <ProgressIndicator
-        current={step}
-        total={4}
-        label={`${STEP_LABELS[step - 1]} — Step ${step} of 4`}
-      />
+      <ProgressIndicator current={step} total={4} onBack={back} />
 
-      <StepTransition stepKey={step}>
+      <StepTransition stepKey={step} direction={direction}>
         {step === 1 && (
           <fieldset>
             <legend className="text-lg font-light text-stone-900 mb-1 block">
@@ -151,25 +235,30 @@ export function QuizForm() {
               Pick the one that best matches how you&rsquo;d wear it.
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {WATCH_STYLES.map(({ value, label, description }) => (
-                <button
-                  key={value}
-                  type="button"
-                  onClick={() => setForm((f) => ({ ...f, watchStyle: value }))}
-                  className={`text-left p-5 min-h-[88px] border transition-all ${
-                    form.watchStyle === value
-                      ? "border-stone-900 bg-stone-900 text-white"
-                      : "border-stone-200 bg-white hover:border-stone-400"
-                  }`}
-                >
-                  <p className={`font-light mb-1 ${form.watchStyle === value ? "text-white" : "text-stone-900"}`}>
-                    {label}
-                  </p>
-                  <p className={`text-xs ${form.watchStyle === value ? "text-stone-300" : "text-stone-500"}`}>
-                    {description}
-                  </p>
-                </button>
-              ))}
+              {WATCH_STYLES.map(({ value, label, description }) => {
+                const sel = form.watchStyle === value;
+                return (
+                  <button
+                    key={value}
+                    type="button"
+                    onClick={() => setForm((f) => ({ ...f, watchStyle: value }))}
+                    className={`relative text-left p-5 min-h-[88px] border transition-all ${
+                      sel
+                        ? "border-stone-900 bg-stone-900 text-white"
+                        : "border-stone-200 bg-white hover:border-stone-400"
+                    }`}
+                  >
+                    {sel && <div className="absolute top-2 right-2 w-1 h-1 bg-gold-400" />}
+                    <StyleIcon value={value} selected={sel} />
+                    <p className={`font-light mb-1 mt-2 ${sel ? "text-white" : "text-stone-900"}`}>
+                      {label}
+                    </p>
+                    <p className={`text-xs ${sel ? "text-stone-300" : "text-stone-500"}`}>
+                      {description}
+                    </p>
+                  </button>
+                );
+              })}
             </div>
           </fieldset>
         )}
@@ -183,25 +272,97 @@ export function QuizForm() {
               This shapes which pieces we put forward.
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {OCCASION_FOCUSES.map(({ value, label, description }) => (
-                <button
-                  key={value}
-                  type="button"
-                  onClick={() => setForm((f) => ({ ...f, occasionFocus: value }))}
-                  className={`text-left p-5 min-h-[88px] border transition-all ${
-                    form.occasionFocus === value
-                      ? "border-stone-900 bg-stone-900 text-white"
-                      : "border-stone-200 bg-white hover:border-stone-400"
-                  }`}
-                >
-                  <p className={`font-light mb-1 ${form.occasionFocus === value ? "text-white" : "text-stone-900"}`}>
-                    {label}
-                  </p>
-                  <p className={`text-xs ${form.occasionFocus === value ? "text-stone-300" : "text-stone-500"}`}>
-                    {description}
-                  </p>
-                </button>
-              ))}
+              {OCCASION_FOCUSES.map(({ value, label, description }) => {
+                const sel = form.occasionFocus === value;
+                return (
+                  <button
+                    key={value}
+                    type="button"
+                    onClick={() => setForm((f) => ({ ...f, occasionFocus: value }))}
+                    className={`relative text-left p-5 min-h-[88px] border transition-all ${
+                      sel
+                        ? "border-stone-900 bg-stone-900 text-white"
+                        : "border-stone-200 bg-white hover:border-stone-400"
+                    }`}
+                  >
+                    {sel && <div className="absolute top-2 right-2 w-1 h-1 bg-gold-400" />}
+                    <OccasionIcon value={value} selected={sel} />
+                    <p className={`font-light mb-1 mt-2 ${sel ? "text-white" : "text-stone-900"}`}>
+                      {label}
+                    </p>
+                    <p className={`text-xs ${sel ? "text-stone-300" : "text-stone-500"}`}>
+                      {description}
+                    </p>
+                  </button>
+                );
+              })}
+            </div>
+          </fieldset>
+        )}
+
+        {step === 3 && (
+          <fieldset>
+            <legend className="text-lg font-light text-stone-900 mb-1 block">
+              Case size preference
+            </legend>
+            <p className="text-sm text-stone-500 mb-6">
+              We&rsquo;ll match pieces to your wrist.
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {CASE_SIZES.map(({ value, label, description }) => {
+                const sel = form.caseSizePreference === value;
+                return (
+                  <button
+                    key={value}
+                    type="button"
+                    onClick={() => setForm((f) => ({ ...f, caseSizePreference: value }))}
+                    className={`relative text-left p-5 min-h-[88px] border transition-all ${
+                      sel
+                        ? "border-stone-900 bg-stone-900 text-white"
+                        : "border-stone-200 bg-white hover:border-stone-400"
+                    }`}
+                  >
+                    {sel && <div className="absolute top-2 right-2 w-1 h-1 bg-gold-400" />}
+                    <p className={`font-light mb-1 ${sel ? "text-white" : "text-stone-900"}`}>
+                      {label}
+                    </p>
+                    <p className={`text-xs ${sel ? "text-stone-300" : "text-stone-500"}`}>
+                      {description}
+                    </p>
+                  </button>
+                );
+              })}
+            </div>
+          </fieldset>
+        )}
+
+        {step === 4 && (
+          <fieldset>
+            <legend className="text-lg font-light text-stone-900 mb-1 block">
+              Brands you already know
+            </legend>
+            <p className="text-xs text-stone-400 mb-6">
+              Optional — skip if you prefer
+            </p>
+            <div className="flex flex-wrap gap-2 mb-8">
+              {BRANDS.map((brand) => {
+                const sel = form.brandFamiliarity.includes(brand);
+                return (
+                  <button
+                    key={brand}
+                    type="button"
+                    onClick={() => toggleBrand(brand)}
+                    className={`relative min-h-[44px] px-5 py-2 text-sm border transition-all ${
+                      sel
+                        ? "border-stone-900 bg-stone-900 text-white"
+                        : "border-stone-200 bg-white text-stone-700 hover:border-stone-400"
+                    }`}
+                  >
+                    {sel && <div className="absolute top-2 right-2 w-1 h-1 bg-gold-400" />}
+                    {brand}
+                  </button>
+                );
+              })}
             </div>
             <div className="mt-8">
               <label className="text-xs tracking-widest uppercase text-stone-500 mb-2 block">
@@ -218,103 +379,45 @@ export function QuizForm() {
             </div>
           </fieldset>
         )}
-
-        {step === 3 && (
-          <fieldset>
-            <legend className="text-lg font-light text-stone-900 mb-1 block">
-              Case size preference
-            </legend>
-            <p className="text-sm text-stone-500 mb-6">
-              We&rsquo;ll match pieces to your wrist.
-            </p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {CASE_SIZES.map(({ value, label, description }) => (
-                <button
-                  key={value}
-                  type="button"
-                  onClick={() => setForm((f) => ({ ...f, caseSizePreference: value }))}
-                  className={`text-left p-5 min-h-[88px] border transition-all ${
-                    form.caseSizePreference === value
-                      ? "border-stone-900 bg-stone-900 text-white"
-                      : "border-stone-200 bg-white hover:border-stone-400"
-                  }`}
-                >
-                  <p className={`font-light mb-1 ${form.caseSizePreference === value ? "text-white" : "text-stone-900"}`}>
-                    {label}
-                  </p>
-                  <p className={`text-xs ${form.caseSizePreference === value ? "text-stone-300" : "text-stone-500"}`}>
-                    {description}
-                  </p>
-                </button>
-              ))}
-            </div>
-          </fieldset>
-        )}
-
-        {step === 4 && (
-          <fieldset>
-            <legend className="text-lg font-light text-stone-900 mb-1 block">
-              Brands you already know
-            </legend>
-            <p className="text-sm text-stone-500 mb-6">
-              Optional — helps us calibrate the introduction. Select any that apply.
-            </p>
-            <div className="flex flex-wrap gap-2">
-              {BRANDS.map((brand) => (
-                <button
-                  key={brand}
-                  type="button"
-                  onClick={() => toggleBrand(brand)}
-                  className={`px-4 py-3 min-h-[44px] text-sm border transition-all ${
-                    form.brandFamiliarity.includes(brand)
-                      ? "border-stone-900 bg-stone-900 text-white"
-                      : "border-stone-200 bg-white text-stone-700 hover:border-stone-400"
-                  }`}
-                >
-                  {brand}
-                </button>
-              ))}
-            </div>
-          </fieldset>
-        )}
       </StepTransition>
 
       {error && (
         <p className="text-red-600 text-sm mt-6">{error}</p>
       )}
 
-      <div className="flex items-center gap-3 mt-10">
-        {step > 1 && (
+      <div className="flex flex-col items-center gap-3 mt-10">
+        <div className="flex items-center gap-3 w-full">
+          {step < 4 ? (
+            <button
+              type="button"
+              onClick={next}
+              disabled={!canAdvance()}
+              className="btn-primary flex-1 py-4 min-h-[48px] disabled:opacity-40"
+            >
+              Continue →
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={handleSubmit}
+              disabled={loading}
+              className="btn-primary flex-1 py-4 min-h-[48px]"
+            >
+              {loading
+                ? "Saving your preferences…"
+                : isEdit
+                  ? "Update my preferences →"
+                  : "Finish & see my selection →"}
+            </button>
+          )}
+        </div>
+        {step === 4 && !loading && (
           <button
             type="button"
-            onClick={back}
-            disabled={loading}
-            className="px-6 py-4 min-h-[48px] border border-stone-300 text-sm tracking-widest uppercase text-stone-600 hover:border-stone-500 transition-colors"
+            onClick={handleSkipStep4}
+            className="text-xs text-stone-400 underline"
           >
-            ← Back
-          </button>
-        )}
-        {step < 4 ? (
-          <button
-            type="button"
-            onClick={next}
-            disabled={!canAdvance()}
-            className="btn-primary flex-1 py-4 min-h-[48px] disabled:opacity-40"
-          >
-            Continue →
-          </button>
-        ) : (
-          <button
-            type="button"
-            onClick={handleSubmit}
-            disabled={loading}
-            className="btn-primary flex-1 py-4 min-h-[48px]"
-          >
-            {loading
-              ? "Saving…"
-              : isEdit
-                ? "Save preferences"
-                : "See my curated selection →"}
+            Skip this step →
           </button>
         )}
       </div>

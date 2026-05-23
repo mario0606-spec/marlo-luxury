@@ -4,6 +4,7 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { SUBSCRIPTION_PLANS, formatCents } from "@/lib/stripe";
 import { SubscriptionActions } from "@/components/subscription/subscription-actions";
+import { PreferencesToast } from "@/components/preferences-toast";
 
 const STATUS_LABELS: Record<string, { label: string; className: string }> = {
   ACTIVE: { label: "Active", className: "bg-green-50 text-green-700 border-green-200" },
@@ -38,6 +39,7 @@ export default async function SubscriptionPage() {
 
   return (
     <div className="min-h-screen bg-stone-50">
+      <PreferencesToast />
       <nav className="border-b border-stone-200 bg-white">
         <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
           <Link href="/" className="text-xl tracking-widest font-light uppercase">Marlo</Link>
@@ -94,43 +96,18 @@ export default async function SubscriptionPage() {
 
             {preferences && (
               <div className="border-t border-stone-100 mt-6 pt-6">
-                <div className="flex items-start justify-between mb-3">
-                  <p className="text-xs tracking-widest uppercase text-stone-500">
-                    Your preferences
-                  </p>
-                  <Link
-                    href="/onboarding/quiz?edit=true"
-                    className="text-xs tracking-widest uppercase text-stone-500 hover:text-stone-900"
-                  >
-                    Edit →
-                  </Link>
-                </div>
-                <div className="space-y-2 text-sm text-stone-600">
-                  <div className="flex justify-between">
-                    <span>Style</span>
-                    <span className="text-stone-900">
-                      {styleLabel[preferences.watchStyle] ?? preferences.watchStyle}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Occasion focus</span>
-                    <span className="text-stone-900">
-                      {occasionLabel[preferences.occasionFocus] ?? preferences.occasionFocus}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Case size</span>
-                    <span className="text-stone-900">{preferences.caseSizePreference}</span>
-                  </div>
-                  {preferences.brandFamiliarity.length > 0 && (
-                    <div className="flex justify-between gap-4">
-                      <span className="flex-shrink-0">Familiar brands</span>
-                      <span className="text-stone-900 text-right">
-                        {preferences.brandFamiliarity.join(", ")}
-                      </span>
-                    </div>
-                  )}
-                </div>
+                <p className="text-xs tracking-widest uppercase text-stone-500 mb-2">
+                  Rental preferences
+                </p>
+                <p className="text-sm font-light text-stone-700 mb-2">
+                  {styleLabel[preferences.watchStyle] ?? preferences.watchStyle} watches · {occasionLabel[preferences.occasionFocus] ?? preferences.occasionFocus}
+                </p>
+                <Link
+                  href="/onboarding/quiz?edit=true"
+                  className="text-xs tracking-widest uppercase text-stone-500 hover:text-stone-900"
+                >
+                  Edit preferences →
+                </Link>
               </div>
             )}
           </div>
