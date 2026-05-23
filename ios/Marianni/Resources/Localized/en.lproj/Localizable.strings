@@ -1,0 +1,5 @@
+/* App display name shown on the launch screen. */
+"app.name" = "marianni";
+
+/* Tagline shown beneath the wordmark on the launch screen. */
+"app.tagline" = "Access to Luxury.\nWear, borrow, return.";
