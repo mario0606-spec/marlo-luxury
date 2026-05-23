@@ -1,10 +1,10 @@
 import { Suspense } from "react";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
-import { ItemCategory, Prisma } from "@prisma/client";
+import { ItemCategory, Prisma, RentalStatus } from "@prisma/client";
 import { NavServer as Nav } from "@/components/nav-server";
-import { ItemCard } from "@/components/item-card";
 import { CatalogFilters } from "@/components/catalog-filters";
+import { CatalogGrid } from "@/components/catalog-grid";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = { title: "Collection" };
@@ -17,19 +17,26 @@ interface PageProps {
     price?: string;
     q?: string;
     page?: string;
+    brand?: string;
+    available?: string;
+    sort?: string;
   }>;
 }
 
-async function ItemGrid({
+async function CatalogContent({
   category,
   price,
   q,
-  page,
+  brand,
+  available,
+  sort,
 }: {
   category: string;
   price: string;
   q: string;
-  page: number;
+  brand: string;
+  available: string;
+  sort: string;
 }) {
   const session = await auth();
   const userId = (session?.user as { id?: string } | undefined)?.id;
@@ -39,6 +46,13 @@ async function ItemGrid({
 
   if (category && Object.values(ItemCategory).includes(category as ItemCategory) && category !== "JEWELRY") {
     where.category = category as ItemCategory;
+  }
+
+  if (brand) {
+    const brands = brand.split(",").map((b) => b.trim()).filter(Boolean);
+    if (brands.length > 0) {
+      where.brand = { in: brands };
+    }
   }
 
   if (price) {
@@ -51,6 +65,10 @@ async function ItemGrid({
     };
   }
 
+  if (available === "1") {
+    where.available = true;
+  }
+
   if (q) {
     where.OR = [
       { name: { contains: q, mode: "insensitive" } },
@@ -60,11 +78,18 @@ async function ItemGrid({
     ];
   }
 
-  const [items, total, userFavorites] = await Promise.all([
+  let orderBy: Prisma.ItemOrderByWithRelationInput[] = [
+    { featured: "desc" },
+    { createdAt: "desc" },
+  ];
+  if (sort === "price_asc") orderBy = [{ dailyRate: "asc" }];
+  else if (sort === "price_desc") orderBy = [{ dailyRate: "desc" }];
+  else if (sort === "newest") orderBy = [{ createdAt: "desc" }];
+
+  const [items, total, userFavorites, allBrands] = await Promise.all([
     prisma.item.findMany({
       where,
-      orderBy: [{ featured: "desc" }, { createdAt: "desc" }],
-      skip: (page - 1) * PAGE_SIZE,
+      orderBy,
       take: PAGE_SIZE,
       select: {
         id: true,
@@ -81,76 +106,80 @@ async function ItemGrid({
           where: { status: "APPROVED" },
           select: { rating: true },
         },
+        rentals: {
+          where: { status: { in: [RentalStatus.CONFIRMED, RentalStatus.ACTIVE] } },
+          select: { endDate: true },
+          orderBy: { endDate: "desc" },
+          take: 1,
+        },
       },
     }),
     prisma.item.count({ where }),
     userId
       ? prisma.favorite.findMany({ where: { userId }, select: { itemId: true } })
       : Promise.resolve([]),
+    prisma.item
+      .findMany({
+        where: { category: { not: ItemCategory.JEWELRY } },
+        select: { brand: true },
+        distinct: ["brand"],
+        orderBy: { brand: "asc" },
+      })
+      .then((rows) => rows.map((r) => r.brand)),
   ]);
 
   const favoritedIds = new Set(userFavorites.map((f) => f.itemId));
 
-  const totalPages = Math.ceil(total / PAGE_SIZE);
+  const mapped = items.map((item) => {
+    const approvedReviews = item.reviews ?? [];
+    const avgRating =
+      approvedReviews.length >= 3
+        ? Math.round((approvedReviews.reduce((s: number, r: { rating: number }) => s + r.rating, 0) / approvedReviews.length) * 10) / 10
+        : null;
+    return {
+      id: item.id,
+      slug: item.slug,
+      name: item.name,
+      brand: item.brand,
+      category: item.category,
+      dailyRate: item.dailyRate,
+      weeklyRate: item.weeklyRate,
+      images: item.images,
+      available: item.available,
+      featured: item.featured,
+      availableFrom: item.rentals[0]?.endDate?.toISOString() ?? null,
+      isFavorited: userId ? favoritedIds.has(item.id) : undefined,
+      averageRating: avgRating,
+      reviewCount: approvedReviews.length >= 3 ? approvedReviews.length : undefined,
+    };
+  });
 
-  if (items.length === 0) {
-    return (
-      <div className="py-24 text-center">
-        <p className="text-stone-600 text-sm tracking-widest uppercase">
-          No items found
-        </p>
-      </div>
-    );
-  }
+  const showAvailableBadge = available === "1";
 
   return (
-    <div>
-      <div className="flex items-center justify-between mb-6">
-        <p className="text-xs text-stone-600 tracking-widest uppercase">
-          {total} {total === 1 ? "piece" : "pieces"}
-        </p>
-      </div>
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {items.map((item, idx) => {
-          const approvedReviews = item.reviews ?? [];
-          const avgRating =
-            approvedReviews.length >= 3
-              ? Math.round((approvedReviews.reduce((s: number, r: { rating: number }) => s + r.rating, 0) / approvedReviews.length) * 10) / 10
-              : null;
-          return (
-          <ItemCard
-            key={item.id}
-            item={item}
-            isFavorited={userId ? favoritedIds.has(item.id) : undefined}
-            averageRating={avgRating}
-            reviewCount={approvedReviews.length >= 3 ? approvedReviews.length : undefined}
-            priority={idx < 3}
+    <>
+      <div className="mb-8 p-6 bg-white border border-stone-200">
+        <Suspense>
+          <CatalogFilters
+            category={category}
+            priceRange={price}
+            search={q}
+            brand={brand}
+            available={available}
+            sort={sort}
+            brands={allBrands}
           />
-          );
-        })}
+        </Suspense>
       </div>
 
-      {totalPages > 1 && (
-        <nav aria-label="Pagination" className="mt-12 flex justify-center gap-2">
-          {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
-            <a
-              key={p}
-              href={`?page=${p}${category ? `&category=${category}` : ""}${price ? `&price=${price}` : ""}${q ? `&q=${q}` : ""}`}
-              aria-label={`Page ${p}`}
-              aria-current={p === page ? "page" : undefined}
-              className={`min-w-[44px] min-h-[44px] flex items-center justify-center text-sm border transition-colors ${
-                p === page
-                  ? "bg-stone-900 text-white border-stone-900"
-                  : "border-stone-200 text-stone-700 hover:border-stone-900"
-              }`}
-            >
-              {p}
-            </a>
-          ))}
-        </nav>
-      )}
-    </div>
+      <Suspense>
+        <CatalogGrid
+          initialItems={mapped}
+          total={total}
+          showAvailableBadge={showAvailableBadge}
+        />
+      </Suspense>
+    </>
   );
 }
 
@@ -159,7 +188,9 @@ export default async function CatalogPage({ searchParams }: PageProps) {
   const category = sp.category ?? "";
   const price = sp.price ?? "";
   const q = sp.q ?? "";
-  const page = Math.max(1, parseInt(sp.page ?? "1", 10));
+  const brand = sp.brand ?? "";
+  const available = sp.available ?? "";
+  const sort = sp.sort ?? "";
 
   return (
     <div className="min-h-screen bg-stone-50">
@@ -174,12 +205,6 @@ export default async function CatalogPage({ searchParams }: PageProps) {
             Luxury Rentals
           </h1>
         </header>
-
-        <div className="mb-8 p-6 bg-white border border-stone-200">
-          <Suspense>
-            <CatalogFilters category={category} priceRange={price} search={q} />
-          </Suspense>
-        </div>
 
         <Suspense
           fallback={
@@ -196,7 +221,14 @@ export default async function CatalogPage({ searchParams }: PageProps) {
             </div>
           }
         >
-          <ItemGrid category={category} price={price} q={q} page={page} />
+          <CatalogContent
+            category={category}
+            price={price}
+            q={q}
+            brand={brand}
+            available={available}
+            sort={sort}
+          />
         </Suspense>
       </main>
 
