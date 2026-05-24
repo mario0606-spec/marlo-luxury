@@ -3,3 +3,24 @@
 
 /* Tagline shown beneath the wordmark on the launch screen. */
 "app.tagline" = "Access to Luxury.\nWear, borrow, return.";
+
+/* Navigation title for the catalog screen. */
+"catalog.title" = "Catalog";
+
+/* Empty-state message shown when no catalog items are returned. */
+"catalog.empty" = "No pieces available right now.\nWe're curating the next selection.";
+
+/* Generic failure message for catalog load errors. Concierge tone (MAR-123 UX review). */
+"catalog.error.generic" = "The catalogue isn't reachable right now. Please try again in a moment.";
+
+/* Retry button label, reused across the app. */
+"common.retry" = "Try again";
+
+/* Visible per-day price on a catalog row, e.g. "€390.00/day". %@ is the formatted price. */
+"catalog.row.pricePerDay" = "%@/day";
+
+/* VoiceOver-spoken form of the per-day price, e.g. "€390.00 per day". %@ is the formatted price. */
+"catalog.row.pricePerDay.a11y" = "%@ per day";
+
+/* Action-verb label on the Home call-to-action button that opens the catalog. */
+"home.cta.openCatalog" = "Discover the collection";

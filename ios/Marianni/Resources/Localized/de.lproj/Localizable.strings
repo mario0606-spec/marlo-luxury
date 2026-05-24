@@ -3,3 +3,24 @@
 
 /* Tagline shown beneath the wordmark on the launch screen. */
 "app.tagline" = "Luxus erleben.\nTragen, leihen, zurückgeben.";
+
+/* Navigation title for the catalog screen. */
+"catalog.title" = "Katalog";
+
+/* Empty-state message shown when no catalog items are returned. */
+"catalog.empty" = "Aktuell keine Stücke verfügbar.\nDie nächste Auswahl wird gerade kuratiert.";
+
+/* Generic failure message for catalog load errors. Concierge tone (MAR-123 UX review). */
+"catalog.error.generic" = "Der Katalog ist momentan nicht erreichbar. Bitte gleich nochmal versuchen.";
+
+/* Retry button label, reused across the app. */
+"common.retry" = "Erneut versuchen";
+
+/* Visible per-day price on a catalog row, e.g. "390,00 €/Tag". %@ is the formatted price. */
+"catalog.row.pricePerDay" = "%@/Tag";
+
+/* VoiceOver-spoken form of the per-day price, e.g. "390,00 € pro Tag". %@ is the formatted price. */
+"catalog.row.pricePerDay.a11y" = "%@ pro Tag";
+
+/* Action-verb label on the Home call-to-action button that opens the catalog. */
+"home.cta.openCatalog" = "Kollektion entdecken";
