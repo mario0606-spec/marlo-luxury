@@ -9,6 +9,11 @@ enum L10n {
     static var appName: String { t("app.name") }
     static var tagline: String { t("app.tagline") }
 
+    static var catalogTitle: String { t("catalog.title") }
+    static var catalogEmpty: String { t("catalog.empty") }
+    static var catalogErrorGeneric: String { t("catalog.error.generic") }
+    static var commonRetry: String { t("common.retry") }
+
     static func t(_ key: String, comment: String = "") -> String {
         Bundle.main.localizedString(forKey: key, value: key, table: nil)
     }
