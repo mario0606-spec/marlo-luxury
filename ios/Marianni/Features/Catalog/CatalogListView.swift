@@ -80,7 +80,7 @@ private struct CatalogRow: View {
             }
             Spacer(minLength: DSSpacing.md)
             Text(pricePerDay)
-                .font(DSType.caption)
+                .font(DSType.priceLabel)
                 .foregroundStyle(DSColor.gold700)
         }
         .padding(.horizontal, DSSpacing.lg)
