@@ -60,17 +60,17 @@ private struct CatalogRow: View {
     let item: CatalogItem
 
     private var pricePerDay: String {
-        Money.formatRentalPerDay(cents: item.priceCents, currency: item.currency)
+        Money.formatRentalPerDay(euros: item.dailyRate)
     }
 
     private var pricePerDayA11y: String {
-        Money.formatRentalPerDayAccessibility(cents: item.priceCents, currency: item.currency)
+        Money.formatRentalPerDayAccessibility(euros: item.dailyRate)
     }
 
     var body: some View {
         HStack(alignment: .firstTextBaseline, spacing: DSSpacing.md) {
             VStack(alignment: .leading, spacing: DSSpacing.xs) {
-                Text(item.title)
+                Text(item.name)
                     .font(DSType.displayMedium)
                     .foregroundStyle(DSColor.charcoal)
                 Text(item.brand)
@@ -88,7 +88,7 @@ private struct CatalogRow: View {
         .padding(.vertical, DSSpacing.md)
         .contentShape(Rectangle())
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(item.title), \(item.brand), \(pricePerDayA11y)")
+        .accessibilityLabel("\(item.name), \(item.brand), \(pricePerDayA11y)")
         .accessibilityIdentifier("catalog.row.\(item.slug)")
     }
 }

@@ -21,20 +21,26 @@ struct MockClient: Client {
         CatalogItem(
             id: "1",
             slug: "rolex-datejust-41-oystersteel",
-            title: "Datejust 41 Oystersteel",
+            name: "Datejust 41 Oystersteel",
             brand: "Rolex",
-            priceCents: 39000,
-            currency: "EUR",
-            imageURL: nil
+            category: "watches",
+            dailyRate: 390,
+            weeklyRate: 2340,
+            images: [],
+            available: true,
+            featured: true
         ),
         CatalogItem(
             id: "2",
             slug: "cartier-love-bracelet-yellow-gold",
-            title: "Love Bracelet, Yellow Gold",
+            name: "Love Bracelet, Yellow Gold",
             brand: "Cartier",
-            priceCents: 29000,
-            currency: "EUR",
-            imageURL: nil
+            category: "jewelry",
+            dailyRate: 290,
+            weeklyRate: 1740,
+            images: [],
+            available: true,
+            featured: true
         ),
     ]
 }

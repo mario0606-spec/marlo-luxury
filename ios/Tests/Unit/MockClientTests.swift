@@ -6,7 +6,7 @@ final class MockClientTests: XCTestCase {
         let client = MockClient()
         let items = try await client.fetchFeaturedItems()
         XCTAssertFalse(items.isEmpty)
-        XCTAssertEqual(items.first?.currency, "EUR")
+        XCTAssertGreaterThan(items.first?.dailyRate ?? 0, 0)
     }
 
     func testFetchItemBySlugFindsKnownFixture() async throws {

@@ -7,16 +7,6 @@ protocol Client: Sendable {
     func fetchItem(slug: String) async throws -> CatalogItem?
 }
 
-struct CatalogItem: Identifiable, Equatable, Sendable {
-    let id: String
-    let slug: String
-    let title: String
-    let brand: String
-    let priceCents: Int
-    let currency: String  // ISO 4217, e.g. "EUR"
-    let imageURL: URL?
-}
-
 enum ClientError: Error, Equatable {
     case notFound
     case transport(String)

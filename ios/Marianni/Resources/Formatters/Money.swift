@@ -1,24 +1,24 @@
 import Foundation
 
 enum Money {
-    static func format(cents: Int, currency: String, locale: Locale = .current) -> String {
+    /// Formats whole euros (Marlo is EUR-only for v1). Locale controls thousands/decimal separators.
+    static func formatEuros(_ amount: Int, locale: Locale = .current) -> String {
         let formatter = NumberFormatter()
         formatter.locale = locale
         formatter.numberStyle = .currency
-        formatter.currencyCode = currency
-        let amount = Decimal(cents) / 100
-        return formatter.string(from: amount as NSDecimalNumber) ?? "\(amount) \(currency)"
+        formatter.currencyCode = "EUR"
+        return formatter.string(from: NSNumber(value: amount)) ?? "\(amount) €"
     }
 
     /// Visible price including the rental period — e.g. "390,00 €/Tag" (DE), "€390.00/day" (EN).
-    static func formatRentalPerDay(cents: Int, currency: String, locale: Locale = .current) -> String {
-        let price = format(cents: cents, currency: currency, locale: locale)
+    static func formatRentalPerDay(euros: Int, locale: Locale = .current) -> String {
+        let price = formatEuros(euros, locale: locale)
         return String(format: template(forKey: "catalog.row.pricePerDay", locale: locale), price)
     }
 
     /// VoiceOver long form — e.g. "390,00 € pro Tag", "€390.00 per day".
-    static func formatRentalPerDayAccessibility(cents: Int, currency: String, locale: Locale = .current) -> String {
-        let price = format(cents: cents, currency: currency, locale: locale)
+    static func formatRentalPerDayAccessibility(euros: Int, locale: Locale = .current) -> String {
+        let price = formatEuros(euros, locale: locale)
         return String(format: template(forKey: "catalog.row.pricePerDay.a11y", locale: locale), price)
     }
 
