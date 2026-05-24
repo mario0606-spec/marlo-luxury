@@ -117,3 +117,14 @@ export function getWatchesForPool(pool: string[]): WatchAssets[] {
     .map((slug) => getWatchBySlug(slug))
     .filter((w): w is WatchAssets => w !== undefined);
 }
+
+export function getWatchByRef(brand: string, refNumber: string): WatchAssets | undefined {
+  const normalizedRef = refNumber.toLowerCase().replace(/[^a-z0-9]/g, "");
+  return watchCatalog.find((w) => {
+    const slugRef = w.slug.split("-").slice(-1)[0];
+    return (
+      w.brand.toLowerCase() === brand.toLowerCase() &&
+      slugRef === normalizedRef
+    );
+  });
+}

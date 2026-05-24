@@ -5,8 +5,10 @@ import {
   getAuthenticityBySerial,
   getAllAuthenticityRecords,
 } from "@/lib/authenticity";
+import { getWatchByRef } from "@/lib/watches";
 import { BASE_URL } from "@/lib/seo";
 import { CertificateQR } from "@/app/components/CertificateQR";
+import { InspectionShowcase } from "@/app/components/InspectionShowcase";
 import type { WatchConditionGrade } from "@/lib/types";
 
 const CONDITION_LABELS: Record<WatchConditionGrade, string> = {
@@ -93,6 +95,7 @@ export default function VerificationPage({
   const latestCondition = record.conditionLog[record.conditionLog.length - 1];
   const authDate = new Date(record.authenticatedAt);
   const verifyUrl = `${process.env.NEXT_PUBLIC_SITE_URL ?? "https://marianni.de"}/auth/${encodeURIComponent(record.serial)}`;
+  const watchAssets = getWatchByRef(record.brand, record.referenceNumber);
 
   return (
     <>
@@ -209,6 +212,23 @@ export default function VerificationPage({
               </section>
             )}
 
+            {watchAssets && watchAssets.images360.length > 0 && (
+              <section className="bg-white border border-gold-200 rounded-lg p-4 sm:p-6">
+                <h2 className="text-xs uppercase tracking-widest text-gold-600 mb-4">
+                  Inspektionsvideo
+                </h2>
+                <InspectionShowcase
+                  frames={watchAssets.images360}
+                  brand={record.brand}
+                  model={record.model}
+                  referenceNumber={record.referenceNumber}
+                  conditionLog={record.conditionLog}
+                  watchmaker={record.watchmaker}
+                  certificateNumber={record.certificateNumber}
+                />
+              </section>
+            )}
+
             {record.inspectionVideoUrl && (
               <section className="bg-white border border-gold-200 rounded-lg p-4 sm:p-6">
                 <h2 className="text-xs uppercase tracking-widest text-gold-600 mb-4">
@@ -220,15 +240,6 @@ export default function VerificationPage({
                   preload="metadata"
                 >
                   <source src={record.inspectionVideoUrl} />
-                  {"captionsUrl" in record &&
-                    typeof (record as Record<string, unknown>).captionsUrl === "string" ? (
-                    <track
-                      kind="captions"
-                      srcLang="de"
-                      src={(record as Record<string, unknown>).captionsUrl as string}
-                      default
-                    />
-                  ) : null}
                 </video>
               </section>
             )}
