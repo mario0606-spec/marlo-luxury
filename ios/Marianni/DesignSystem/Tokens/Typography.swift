@@ -21,6 +21,15 @@ enum DSType {
     static let caption:   Font = font(family: uiFamily, size: 12, weight: .regular, fallback: .system(size: 12, weight: .regular, design: .default))
     static let button:    Font = font(family: uiFamily, size: 15, weight: .semibold, fallback: .system(size: 15, weight: .semibold, design: .default))
 
+    // Price — semibold + monospaced digits so amounts align across rows and
+    // never reflow as currency formatting changes (`390,00 €/Tag` vs `€390.00/day`).
+    static let priceLabel: Font = font(
+        family: uiFamily,
+        size: 15,
+        weight: .semibold,
+        fallback: .system(size: 15, weight: .semibold, design: .default)
+    ).monospacedDigit()
+
     private static func font(family: String, size: CGFloat, weight: Font.Weight, fallback: Font) -> Font {
         // Until fonts are registered, return the fallback so the app still renders
         // with the correct design tone (serif vs sans) and weight.

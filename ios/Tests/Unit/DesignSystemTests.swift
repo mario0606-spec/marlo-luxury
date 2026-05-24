@@ -40,4 +40,11 @@ final class DesignSystemTests: XCTestCase {
         XCTAssertEqual(DSType.displayFamily, "Cormorant")
         XCTAssertEqual(DSType.uiFamily, "Lato")
     }
+
+    func testPriceLabelTokenResolves() {
+        // Resolving the token must not crash whether Lato is registered or not —
+        // both paths flow through the same helper and end in `.monospacedDigit()`.
+        let token: Font = DSType.priceLabel
+        XCTAssertNotNil(token)
+    }
 }

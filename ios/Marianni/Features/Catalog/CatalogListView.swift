@@ -59,12 +59,13 @@ private struct CatalogList: View {
 private struct CatalogRow: View {
     let item: CatalogItem
 
-    private var price: String {
-        Money.format(cents: item.priceCents, currency: item.currency)
+    private var pricePerDay: String {
+        Money.formatRentalPerDay(cents: item.priceCents, currency: item.currency)
     }
 
-    private var pricePerDay: String { L10n.catalogRowPricePerDay(price) }
-    private var pricePerDayA11y: String { L10n.catalogRowPricePerDayA11y(price) }
+    private var pricePerDayA11y: String {
+        Money.formatRentalPerDayAccessibility(cents: item.priceCents, currency: item.currency)
+    }
 
     var body: some View {
         HStack(alignment: .firstTextBaseline, spacing: DSSpacing.md) {
@@ -80,7 +81,7 @@ private struct CatalogRow: View {
             }
             Spacer(minLength: DSSpacing.md)
             Text(pricePerDay)
-                .font(DSType.caption)
+                .font(DSType.priceLabel)
                 .foregroundStyle(DSColor.gold700)
         }
         .padding(.horizontal, DSSpacing.lg)
@@ -154,17 +155,8 @@ private struct ErrorStateView: View {
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, DSSpacing.xl)
                 .accessibilityIdentifier("catalog.error.message")
-            Button(action: retry) {
+            DSButton(variant: .outline, action: retry) {
                 Text(L10n.commonRetry)
-                    .font(DSType.button)
-                    .foregroundStyle(DSColor.charcoal)
-                    .padding(.horizontal, DSSpacing.lg)
-                    .padding(.vertical, DSSpacing.md)
-                    .frame(minHeight: 44)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: DSRadius.pill)
-                            .stroke(DSColor.gold500, lineWidth: 1)
-                    )
             }
             .accessibilityIdentifier("catalog.retry")
         }
