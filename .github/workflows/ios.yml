@@ -19,13 +19,13 @@ concurrency:
 jobs:
   build-and-test:
     name: Build & Test (iOS Simulator)
-    runs-on: macos-14
+    runs-on: macos-15
     timeout-minutes: 25
 
     env:
-      XCODE_VERSION: "15.4"
+      XCODE_VERSION: "16.2"
       SCHEME: Marianni
-      DESTINATION: "platform=iOS Simulator,name=iPhone 15,OS=17.5"
+      DESTINATION: "platform=iOS Simulator,name=iPhone 16,OS=18.2"
 
     defaults:
       run:
