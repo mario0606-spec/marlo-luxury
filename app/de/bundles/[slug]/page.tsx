@@ -3,7 +3,9 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { getBundleBySlug, occasionBundles } from "@/lib/bundles";
 import { getStoryById } from "@/lib/stories";
+import { getWatchesForPool } from "@/lib/watches";
 import { Breadcrumbs } from "@/app/components/Breadcrumbs";
+import { ImmersiveGallery } from "@/app/components/ImmersiveGallery";
 import { BASE_URL, hreflangAlternates, truncate } from "@/lib/seo";
 
 export function generateStaticParams() {
@@ -99,6 +101,8 @@ export default function BundleDetailPage({
   if (!bundle) notFound();
 
   const story = getStoryById(bundle.editorialAnchorStoryId);
+  const watches = getWatchesForPool(bundle.watchPool);
+  const featuredWatch = watches[0] ?? null;
 
   return (
     <>
@@ -121,6 +125,12 @@ export default function BundleDetailPage({
             &larr; Alle Bundles
           </Link>
         </header>
+
+        {featuredWatch && (
+          <section className="max-w-3xl mx-auto px-6 pt-8">
+            <ImmersiveGallery watch={featuredWatch} />
+          </section>
+        )}
 
         <article className="max-w-3xl mx-auto px-6 py-12">
           <span className="text-xs uppercase tracking-widest text-marlo-gold">
