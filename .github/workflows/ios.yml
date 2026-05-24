@@ -23,7 +23,6 @@ jobs:
     timeout-minutes: 35
 
     env:
-      XCODE_VERSION: "16.2"
       SCHEME: Marianni
 
     defaults:
@@ -33,13 +32,30 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Select Xcode ${{ env.XCODE_VERSION }}
-        run: sudo xcode-select -s "/Applications/Xcode_${XCODE_VERSION}.app"
+      - name: Select latest Xcode available on the runner
+        run: |
+          set -euo pipefail
+          # Pick the highest Xcode_*.app present in /Applications. Pinning a
+          # specific Xcode version is brittle because the runner image ships
+          # only certain iOS simulator runtimes — the latest Xcode is what
+          # actually matches the preinstalled runtime.
+          XCODE_APP=$(ls -d /Applications/Xcode_*.app 2>/dev/null \
+            | sort -V \
+            | tail -n 1)
+          if [ -z "$XCODE_APP" ]; then
+            echo "No Xcode_*.app found in /Applications" >&2
+            ls /Applications >&2
+            exit 1
+          fi
+          echo "Selecting $XCODE_APP"
+          sudo xcode-select -s "$XCODE_APP/Contents/Developer"
+        working-directory: .
 
       - name: Show toolchain
         run: |
           xcodebuild -version
           swift --version
+          xcrun simctl list runtimes
 
       - name: Install XcodeGen
         run: brew install xcodegen
