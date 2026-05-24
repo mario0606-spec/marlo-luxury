@@ -31,22 +31,18 @@ struct HomeView: View {
                     NavigationLink {
                         CatalogListView(client: client)
                     } label: {
-                        Text(L10n.catalogTitle)
+                        Text(L10n.homeCtaOpenCatalog)
                             .font(DSType.button)
                             .foregroundStyle(DSColor.charcoal)
                             .padding(.horizontal, DSSpacing.xl)
                             .padding(.vertical, DSSpacing.md)
+                            .frame(minHeight: 44)
                             .overlay(
                                 RoundedRectangle(cornerRadius: DSRadius.pill)
                                     .stroke(DSColor.gold500, lineWidth: 1)
                             )
                     }
                     .accessibilityIdentifier("home.openCatalog")
-
-                    RoundedRectangle(cornerRadius: DSRadius.pill)
-                        .fill(DSColor.gold500)
-                        .frame(width: 56, height: 4)
-                        .accessibilityHidden(true)
 
                     Spacer().frame(height: DSSpacing.xxl)
                 }

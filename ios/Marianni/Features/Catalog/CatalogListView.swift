@@ -11,6 +11,7 @@ struct CatalogListView: View {
         ZStack {
             DSColor.cream.ignoresSafeArea()
             content
+                .animation(DSMotion.easeStandard, value: viewModel.state)
         }
         .navigationTitle(L10n.catalogTitle)
         .navigationBarTitleDisplayMode(.large)
@@ -62,8 +63,11 @@ private struct CatalogRow: View {
         Money.format(cents: item.priceCents, currency: item.currency)
     }
 
+    private var pricePerDay: String { L10n.catalogRowPricePerDay(price) }
+    private var pricePerDayA11y: String { L10n.catalogRowPricePerDayA11y(price) }
+
     var body: some View {
-        HStack(alignment: .top, spacing: DSSpacing.md) {
+        HStack(alignment: .firstTextBaseline, spacing: DSSpacing.md) {
             VStack(alignment: .leading, spacing: DSSpacing.xs) {
                 Text(item.title)
                     .font(DSType.displayMedium)
@@ -75,7 +79,7 @@ private struct CatalogRow: View {
                     .kerning(1.0)
             }
             Spacer(minLength: DSSpacing.md)
-            Text(price)
+            Text(pricePerDay)
                 .font(DSType.caption)
                 .foregroundStyle(DSColor.gold700)
         }
@@ -83,7 +87,7 @@ private struct CatalogRow: View {
         .padding(.vertical, DSSpacing.md)
         .contentShape(Rectangle())
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(item.title), \(item.brand), \(price)")
+        .accessibilityLabel("\(item.title), \(item.brand), \(pricePerDayA11y)")
         .accessibilityIdentifier("catalog.row.\(item.slug)")
     }
 }
@@ -91,8 +95,8 @@ private struct CatalogRow: View {
 private struct CatalogSkeletonList: View {
     var body: some View {
         VStack(spacing: 0) {
-            ForEach(0..<4, id: \.self) { _ in
-                HStack(alignment: .top, spacing: DSSpacing.md) {
+            ForEach(0..<7, id: \.self) { _ in
+                HStack(alignment: .firstTextBaseline, spacing: DSSpacing.md) {
                     VStack(alignment: .leading, spacing: DSSpacing.xs) {
                         RoundedRectangle(cornerRadius: DSRadius.sm)
                             .fill(DSColor.stone200)
@@ -113,7 +117,6 @@ private struct CatalogSkeletonList: View {
                     .overlay(DSColor.gold500.opacity(0.15))
                     .padding(.horizontal, DSSpacing.lg)
             }
-            Spacer()
         }
         .padding(.top, DSSpacing.md)
         .redacted(reason: .placeholder)
@@ -150,12 +153,14 @@ private struct ErrorStateView: View {
                 .foregroundStyle(DSColor.charcoal.opacity(0.8))
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, DSSpacing.xl)
+                .accessibilityIdentifier("catalog.error.message")
             Button(action: retry) {
                 Text(L10n.commonRetry)
                     .font(DSType.button)
                     .foregroundStyle(DSColor.charcoal)
                     .padding(.horizontal, DSSpacing.lg)
-                    .padding(.vertical, DSSpacing.sm)
+                    .padding(.vertical, DSSpacing.md)
+                    .frame(minHeight: 44)
                     .overlay(
                         RoundedRectangle(cornerRadius: DSRadius.pill)
                             .stroke(DSColor.gold500, lineWidth: 1)
@@ -174,6 +179,11 @@ private struct ErrorStateView: View {
 #Preview("Loaded — Dark") {
     NavigationStack { CatalogListView(client: MockClient()) }
         .preferredColorScheme(.dark)
+}
+
+#Preview("Loaded — AX5") {
+    NavigationStack { CatalogListView(client: MockClient()) }
+        .environment(\.dynamicTypeSize, .accessibility5)
 }
 
 #Preview("Empty") {

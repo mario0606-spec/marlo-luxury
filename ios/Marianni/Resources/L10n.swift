@@ -13,6 +13,17 @@ enum L10n {
     static var catalogEmpty: String { t("catalog.empty") }
     static var catalogErrorGeneric: String { t("catalog.error.generic") }
     static var commonRetry: String { t("common.retry") }
+    static var homeCtaOpenCatalog: String { t("home.cta.openCatalog") }
+
+    /// Visible per-day price on a catalog row (e.g. "390,00 €/Tag").
+    static func catalogRowPricePerDay(_ price: String) -> String {
+        String(format: t("catalog.row.pricePerDay"), price)
+    }
+
+    /// VoiceOver-spoken per-day price (e.g. "390,00 € pro Tag").
+    static func catalogRowPricePerDayA11y(_ price: String) -> String {
+        String(format: t("catalog.row.pricePerDay.a11y"), price)
+    }
 
     static func t(_ key: String, comment: String = "") -> String {
         Bundle.main.localizedString(forKey: key, value: key, table: nil)
