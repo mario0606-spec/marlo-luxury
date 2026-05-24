@@ -28,6 +28,7 @@ targets:
       - path: Marianni
         excludes:
           - "DesignSystem/Fonts/FONTS.md"
+          - "App/Marianni.entitlements"
     info:
       path: Marianni/App/Info.plist
       properties:
@@ -46,6 +47,16 @@ targets:
         CFBundleLocalizations:
           - en
           - de
+        APIEnvironment: development
+        CFBundleURLTypes:
+          - CFBundleTypeRole: Editor
+            CFBundleURLName: com.marianni.app.handoff
+            CFBundleURLSchemes:
+              - marianni
+        NSAppTransportSecurity:
+          NSExceptionDomains:
+            localhost:
+              NSExceptionAllowsInsecureHTTPLoads: true
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.marianni.app

@@ -3,3 +3,27 @@
 
 /* Tagline shown beneath the wordmark on the launch screen. */
 "app.tagline" = "Luxus erleben.\nTragen, leihen, zurückgeben.";
+
+/* Tab bar labels. */
+"tab.home" = "Start";
+"tab.browse" = "Entdecken";
+"tab.favorites" = "Favoriten";
+"tab.reservations" = "Reservierungen";
+"tab.profile" = "Profil";
+
+/* Placeholder screens (replaced as each feature lands). */
+"browse.placeholder" = "Der kuratierte Katalog. Bald verfügbar.";
+"favorites.placeholder" = "Hier erscheinen Ihre gespeicherten Stücke.";
+"reservations.placeholder" = "Ihre kommenden und vergangenen Reservierungen.";
+
+/* Auth — web → app handoff. */
+"auth.signin.subtitle" = "Melden Sie sich im Web an. Wir leiten Sie direkt zurück in die App.";
+"auth.signin.cta" = "marianni im Web öffnen";
+"auth.signin.footnote" = "Kein Passwort in der App nötig. Wir authentifizieren Sie sicher.";
+"auth.handoff.error.title" = "Anmeldung fehlgeschlagen";
+
+/* Profile actions. */
+"profile.signout" = "Abmelden";
+
+/* Common. */
+"common.ok" = "OK";

@@ -3,3 +3,27 @@
 
 /* Tagline shown beneath the wordmark on the launch screen. */
 "app.tagline" = "Access to Luxury.\nWear, borrow, return.";
+
+/* Tab bar labels. */
+"tab.home" = "Home";
+"tab.browse" = "Browse";
+"tab.favorites" = "Favorites";
+"tab.reservations" = "Reservations";
+"tab.profile" = "Profile";
+
+/* Placeholder screens (replaced as each feature lands). */
+"browse.placeholder" = "Browse the curated catalog. Coming soon.";
+"favorites.placeholder" = "Pieces you saved will appear here.";
+"reservations.placeholder" = "Your upcoming and past reservations.";
+
+/* Auth — web → app handoff. */
+"auth.signin.subtitle" = "Sign in on the web. We'll send you straight back into the app.";
+"auth.signin.cta" = "Open marianni on the web";
+"auth.signin.footnote" = "No password needed in the app. We'll re-authenticate you securely.";
+"auth.handoff.error.title" = "Sign-in failed";
+
+/* Profile actions. */
+"profile.signout" = "Sign out";
+
+/* Common. */
+"common.ok" = "OK";
