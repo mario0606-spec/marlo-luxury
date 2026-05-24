@@ -80,6 +80,14 @@ Restrained luxury. Quick rules of thumb:
   helper for non-view contexts.
 - **Accessibility:** every interactive element must have an accessibility label.
   Verify with VoiceOver and AX5 Dynamic Type before declaring a screen done.
+  - **Canonical product-row a11y label:** `"<brand> <name>, <price-per-day>"` —
+    e.g. *"Rolex Datejust 41 Oystersteel, 390 € pro Tag"*. Brand-first matches
+    how luxury watches and jewelry are referenced in catalogs and concierge
+    conversation; brand + name are joined by a space (one product reference),
+    and the comma separates the name block from the price. The visual hierarchy
+    is still name-first with brand-as-uppercase-tag underneath — only the
+    spoken order is brand-first. Apply to catalog rows, detail headers, cart
+    line items, and search results.
 
 ## Code style
 

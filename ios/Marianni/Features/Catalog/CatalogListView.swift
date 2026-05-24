@@ -88,7 +88,10 @@ private struct CatalogRow: View {
         .padding(.vertical, DSSpacing.md)
         .contentShape(Rectangle())
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(item.name), \(item.brand), \(pricePerDayA11y)")
+        // Canonical row a11y label: brand-first matches luxury catalog convention
+        // ("Rolex Datejust 41 Oystersteel"). Brand+name joined by space so
+        // VoiceOver reads them as one product reference; comma separates price.
+        .accessibilityLabel("\(item.brand) \(item.name), \(pricePerDayA11y)")
         .accessibilityIdentifier("catalog.row.\(item.slug)")
     }
 }
