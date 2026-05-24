@@ -80,14 +80,21 @@ Restrained luxury. Quick rules of thumb:
   helper for non-view contexts.
 - **Accessibility:** every interactive element must have an accessibility label.
   Verify with VoiceOver and AX5 Dynamic Type before declaring a screen done.
+  - **Canonical product-row view:** `DesignSystem/Components/ProductRow.swift`
+    is the single SwiftUI view used wherever a `CatalogItem` appears in a list
+    (catalog, cart, checkout summary, order history, search results). Visual
+    hierarchy is **brand-as-headline, model-as-qualifier underneath** — brand
+    in `DSType.caption` uppercase + 1.2 kerning eyebrow, model in
+    `DSType.displaySmall` (22pt serif), price in `DSType.priceLabel` +
+    `gold700`. Brand-first matches the DACH luxury convention (Rolex, Patek
+    Philippe, Cartier are what buyers scan for) and lets AX5 Dynamic Type
+    breathe — the 28pt serif we shipped on [MAR-123](/MAR/issues/MAR-123)
+    stacked awkwardly across two lines.
   - **Canonical product-row a11y label:** `"<brand> <name>, <price-per-day>"` —
-    e.g. *"Rolex Datejust 41 Oystersteel, 390 € pro Tag"*. Brand-first matches
-    how luxury watches and jewelry are referenced in catalogs and concierge
-    conversation; brand + name are joined by a space (one product reference),
-    and the comma separates the name block from the price. The visual hierarchy
-    is still name-first with brand-as-uppercase-tag underneath — only the
-    spoken order is brand-first. Apply to catalog rows, detail headers, cart
-    line items, and search results.
+    e.g. *"Rolex Datejust 41 Oystersteel, 390 € pro Tag"*. Brand + name joined
+    by a space (one product reference); the comma separates the name block
+    from the price. Spoken order mirrors the visual order. Accessibility
+    identifier is `product.row.<slug>`.
 
 ## Code style
 

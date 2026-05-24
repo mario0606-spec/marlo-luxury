@@ -43,7 +43,7 @@ private struct CatalogList: View {
         ScrollView {
             LazyVStack(spacing: 0) {
                 ForEach(items) { item in
-                    CatalogRow(item: item)
+                    ProductRow(item: item)
                     Divider()
                         .frame(height: 1)
                         .overlay(DSColor.gold500.opacity(0.25))
@@ -56,66 +56,11 @@ private struct CatalogList: View {
     }
 }
 
-private struct CatalogRow: View {
-    let item: CatalogItem
-
-    private var pricePerDay: String {
-        Money.formatRentalPerDay(euros: item.dailyRate)
-    }
-
-    private var pricePerDayA11y: String {
-        Money.formatRentalPerDayAccessibility(euros: item.dailyRate)
-    }
-
-    var body: some View {
-        HStack(alignment: .firstTextBaseline, spacing: DSSpacing.md) {
-            VStack(alignment: .leading, spacing: DSSpacing.xs) {
-                Text(item.name)
-                    .font(DSType.displayMedium)
-                    .foregroundStyle(DSColor.charcoal)
-                Text(item.brand)
-                    .font(DSType.body)
-                    .foregroundStyle(DSColor.charcoal.opacity(0.65))
-                    .textCase(.uppercase)
-                    .kerning(1.0)
-            }
-            Spacer(minLength: DSSpacing.md)
-            Text(pricePerDay)
-                .font(DSType.priceLabel)
-                .foregroundStyle(DSColor.gold700)
-        }
-        .padding(.horizontal, DSSpacing.lg)
-        .padding(.vertical, DSSpacing.md)
-        .contentShape(Rectangle())
-        .accessibilityElement(children: .combine)
-        // Canonical row a11y label: brand-first matches luxury catalog convention
-        // ("Rolex Datejust 41 Oystersteel"). Brand+name joined by space so
-        // VoiceOver reads them as one product reference; comma separates price.
-        .accessibilityLabel("\(item.brand) \(item.name), \(pricePerDayA11y)")
-        .accessibilityIdentifier("catalog.row.\(item.slug)")
-    }
-}
-
 private struct CatalogSkeletonList: View {
     var body: some View {
         VStack(spacing: 0) {
             ForEach(0..<7, id: \.self) { _ in
-                HStack(alignment: .firstTextBaseline, spacing: DSSpacing.md) {
-                    VStack(alignment: .leading, spacing: DSSpacing.xs) {
-                        RoundedRectangle(cornerRadius: DSRadius.sm)
-                            .fill(DSColor.stone200)
-                            .frame(width: 200, height: 22)
-                        RoundedRectangle(cornerRadius: DSRadius.sm)
-                            .fill(DSColor.stone200.opacity(0.6))
-                            .frame(width: 120, height: 14)
-                    }
-                    Spacer()
-                    RoundedRectangle(cornerRadius: DSRadius.sm)
-                        .fill(DSColor.stone200.opacity(0.6))
-                        .frame(width: 56, height: 14)
-                }
-                .padding(.horizontal, DSSpacing.lg)
-                .padding(.vertical, DSSpacing.md)
+                ProductRowSkeleton()
                 Divider()
                     .frame(height: 1)
                     .overlay(DSColor.gold500.opacity(0.15))
