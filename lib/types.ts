@@ -70,7 +70,9 @@ export interface WatchAuthenticity {
   model: string;
   referenceNumber: string;
   watchmaker: string;
+  // swap-when-funded: Mux/Cloudflare Stream — replace static URL with streaming video platform
   inspectionVideoUrl: string | null;
+  // swap-when-funded: NFC NTAG 424 DNA — replace null stubs with real NFC UIDs from physical cards
   nfcUid: string | null;
   conditionLog: ConditionEntry[];
   authenticatedAt: string;

@@ -22,8 +22,8 @@ export async function POST(req: NextRequest) {
 
   const id = crypto.randomUUID();
 
-  // In production: persist to DB, charge via Stripe, send confirmation email.
-  // For now: return success with booking ID.
+  // swap-when-funded: Stripe payments — integrate Stripe Checkout for real charges
+  // For now: return success with booking ID (no payment collected).
   console.log(
     `[Booking] ${id} — ${bundle.displayName} for ${customerName} <${customerEmail}> starting ${startDate}`
   );

@@ -229,6 +229,7 @@ export default function VerificationPage({
               </section>
             )}
 
+            {/* swap-when-funded: Mux/Cloudflare Stream — replace <video> with Mux Player or Stream embed for adaptive bitrate */}
             {record.inspectionVideoUrl && (
               <section className="bg-white border border-gold-200 rounded-lg p-4 sm:p-6">
                 <h2 className="text-xs uppercase tracking-widest text-gold-600 mb-4">
@@ -244,6 +245,7 @@ export default function VerificationPage({
               </section>
             )}
 
+            {/* swap-when-funded: NFC NTAG 424 DNA — replace QR card stub with NFC tap-to-verify using real NTAG 424 DNA cards */}
             {record.nfcUid && (
               <section className="bg-white border border-gold-200 rounded-lg p-4 sm:p-6">
                 <h2 className="text-xs uppercase tracking-widest text-gold-600 mb-4">

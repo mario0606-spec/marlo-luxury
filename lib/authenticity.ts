@@ -1,5 +1,6 @@
 import { WatchAuthenticity } from "./types";
 
+// swap-when-funded: Postgres database — move authenticity records from in-memory to a real database
 const authenticityRecords: WatchAuthenticity[] = [
   {
     id: "auth-001",

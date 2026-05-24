@@ -10,6 +10,7 @@ interface ModelViewerARProps {
   className?: string;
 }
 
+// swap-when-funded: WANNA SDK — add wrist/hand try-on AR behind feature flag, keep model-viewer as fallback
 export function ModelViewerAR({
   glbSrc,
   usdzSrc,
