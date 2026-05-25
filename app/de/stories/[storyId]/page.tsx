@@ -27,7 +27,34 @@ export function generateMetadata({
   };
 }
 
-function InlineWatchCta({ bundle }: { bundle: OccasionBundle }) {
+function InlineWatchCta({
+  bundle,
+  watchSlug,
+}: {
+  bundle: OccasionBundle;
+  watchSlug?: string;
+}) {
+  if (watchSlug) {
+    return (
+      <div className="my-8 border border-marlo-gold/30 rounded-lg bg-white p-5 md:p-6">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+          <div className="flex-1 min-w-0">
+            <p className="text-xs uppercase tracking-widest text-marlo-gold mb-1">
+              Diese Uhr mieten
+            </p>
+            <p className="font-medium text-lg">{bundle.watchFamily}</p>
+          </div>
+          <Link
+            href={`/de/watches/${watchSlug}`}
+            className="shrink-0 inline-block bg-marlo-dark text-white px-6 py-3 rounded hover:bg-marlo-gold transition-colors text-sm font-medium text-center"
+          >
+            Zur Uhr
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="my-8 border border-marlo-gold/30 rounded-lg bg-white p-5 md:p-6">
       <div className="flex flex-col sm:flex-row sm:items-center gap-4">
@@ -115,10 +142,16 @@ function ContentBlock({
       return (
         <h2 className="mt-10 text-xl md:text-2xl font-medium">{block.text}</h2>
       );
+    case "styling_tip":
+      return (
+        <aside className="border-l-2 border-gold-500 pl-4 italic my-6 text-stone-600">
+          {block.text}
+        </aside>
+      );
     case "watch_cta": {
       const bundle = bundles.get(block.bundleSlug);
       if (!bundle) return null;
-      return <InlineWatchCta bundle={bundle} />;
+      return <InlineWatchCta bundle={bundle} watchSlug={block.watchSlug} />;
     }
     case "watch_cta_generic":
       return (
@@ -164,11 +197,14 @@ function StoryJsonLd({
   story: NonNullable<ReturnType<typeof getStoryById>>;
   primaryBundle: OccasionBundle | undefined;
 }) {
+  const heroImage = `${BASE_URL}/images/stories/${story.id}.webp`;
+
   const articleLd = {
     "@context": "https://schema.org",
     "@type": "Article",
     headline: story.title,
     description: story.excerpt,
+    image: heroImage,
     author: { "@type": "Organization", name: story.author },
     datePublished: story.publishedAt,
     mainEntityOfPage: {
@@ -252,7 +288,7 @@ export default function StoryPage({
   if (!story) notFound();
 
   const ctaBundleSlugs = story.contentBlocks
-    .filter((b): b is { type: "watch_cta"; bundleSlug: string } => b.type === "watch_cta")
+    .filter((b): b is { type: "watch_cta"; bundleSlug: string; watchSlug?: string } => b.type === "watch_cta")
     .map((b) => b.bundleSlug);
   const allBundleSlugs = Array.from(new Set([...story.bundleSlugs, ...ctaBundleSlugs]));
   const bundleMap = new Map(
@@ -265,6 +301,10 @@ export default function StoryPage({
     : undefined;
   const relatedStories = getRelatedStories(story.id, 3);
   const bundleInsertIndex = Math.floor(story.contentBlocks.length / 2);
+
+  const storyIndex = editorialStories.findIndex((s) => s.id === story.id);
+  const prevStory = storyIndex > 0 ? editorialStories[storyIndex - 1] : null;
+  const nextStory = storyIndex < editorialStories.length - 1 ? editorialStories[storyIndex + 1] : null;
 
   return (
     <>
@@ -281,7 +321,7 @@ export default function StoryPage({
 
         <header className="border-b border-marlo-gold/20 px-6 py-6">
           <Link
-            href="/de/bundles"
+            href="/de/stories"
             className="text-sm text-marlo-dark/60 hover:text-marlo-gold"
           >
             &larr; Zurück
@@ -333,35 +373,61 @@ export default function StoryPage({
             <section className="mt-16 border-t border-marlo-gold/20 pt-10">
               <h2 className="text-lg font-medium mb-6">Weiterlesen</h2>
               <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                {relatedStories.map((related) => {
-                  const relatedBundle = related.bundleSlugs[0]
-                    ? getBundleBySlug(related.bundleSlugs[0])
-                    : undefined;
-                  return (
-                    <Link
-                      key={related.id}
-                      href={`/de/stories/${related.id}`}
-                      className="group block border border-marlo-gold/20 rounded-lg p-5 bg-white hover:border-marlo-gold transition-colors"
-                    >
-                      <span className="text-xs uppercase tracking-widest text-marlo-gold">
-                        {related.occasion}
-                      </span>
-                      <h3 className="mt-2 font-medium leading-snug group-hover:text-marlo-gold transition-colors">
-                        {related.title}
-                      </h3>
-                      <p className="mt-2 text-sm text-marlo-dark/60 line-clamp-2">
-                        {related.excerpt}
-                      </p>
-                      {relatedBundle && (
-                        <p className="mt-3 text-xs text-marlo-gold">
-                          ab {relatedBundle.priceEur.toLocaleString("de-DE")} €
-                        </p>
-                      )}
-                    </Link>
-                  );
-                })}
+                {relatedStories.map((related) => (
+                  <Link
+                    key={related.id}
+                    href={`/de/stories/${related.id}`}
+                    className="group block border border-marlo-gold/20 rounded-lg p-5 bg-white hover:border-marlo-gold transition-colors"
+                  >
+                    <span className="text-xs uppercase tracking-widest text-marlo-gold">
+                      {related.occasion}
+                    </span>
+                    <h3 className="mt-2 font-medium leading-snug group-hover:text-marlo-gold transition-colors">
+                      {related.title}
+                    </h3>
+                    <p className="mt-2 text-sm text-marlo-dark/60 line-clamp-2">
+                      {related.excerpt}
+                    </p>
+                  </Link>
+                ))}
               </div>
             </section>
+          )}
+
+          {(prevStory || nextStory) && (
+            <nav
+              className="mt-16 border-t border-marlo-gold/20 pt-8 flex justify-between gap-4"
+              aria-label="Lookbook navigation"
+            >
+              {prevStory ? (
+                <Link
+                  href={`/de/stories/${prevStory.id}`}
+                  className="group flex-1 text-left"
+                >
+                  <p className="text-xs uppercase tracking-widest text-marlo-gold mb-1">
+                    &larr; Vorheriger
+                  </p>
+                  <p className="font-medium text-sm group-hover:text-marlo-gold transition-colors line-clamp-2">
+                    {prevStory.title}
+                  </p>
+                </Link>
+              ) : (
+                <div className="flex-1" />
+              )}
+              {nextStory && (
+                <Link
+                  href={`/de/stories/${nextStory.id}`}
+                  className="group flex-1 text-right"
+                >
+                  <p className="text-xs uppercase tracking-widest text-marlo-gold mb-1">
+                    Nächster &rarr;
+                  </p>
+                  <p className="font-medium text-sm group-hover:text-marlo-gold transition-colors line-clamp-2">
+                    {nextStory.title}
+                  </p>
+                </Link>
+              )}
+            </nav>
           )}
         </article>
       </main>

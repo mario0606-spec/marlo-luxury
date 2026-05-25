@@ -8,6 +8,7 @@ export interface WatchAssets {
   arModelUsdz: string | null;
   arEnabled: boolean;
   posterImage: string;
+  rentalStartingPriceEur?: number;
 }
 
 function generate360Frames(slug: string, count = 36): string[] {
@@ -28,6 +29,7 @@ export const watchCatalog: WatchAssets[] = [
     arModelUsdz: "/models/patek-calatrava-5196r.usdz",
     arEnabled: true,
     posterImage: "/images/posters/patek-calatrava-5196r-poster.webp",
+    rentalStartingPriceEur: 890,
   },
   {
     slug: "patek-calatrava-5227g",
@@ -39,6 +41,7 @@ export const watchCatalog: WatchAssets[] = [
     arModelUsdz: "/models/patek-calatrava-5227g.usdz",
     arEnabled: true,
     posterImage: "/images/posters/patek-calatrava-5227g-poster.webp",
+    rentalStartingPriceEur: 890,
   },
   {
     slug: "patek-calatrava-6119r",
@@ -50,6 +53,7 @@ export const watchCatalog: WatchAssets[] = [
     arModelUsdz: "/models/patek-calatrava-6119r.usdz",
     arEnabled: true,
     posterImage: "/images/posters/patek-calatrava-6119r-poster.webp",
+    rentalStartingPriceEur: 890,
   },
   {
     slug: "rolex-daytona-116500ln",
@@ -61,6 +65,7 @@ export const watchCatalog: WatchAssets[] = [
     arModelUsdz: "/models/rolex-daytona-116500ln.usdz",
     arEnabled: true,
     posterImage: "/images/posters/rolex-daytona-116500ln-poster.webp",
+    rentalStartingPriceEur: 490,
   },
   {
     slug: "rolex-daytona-116508",
@@ -72,6 +77,7 @@ export const watchCatalog: WatchAssets[] = [
     arModelUsdz: "/models/rolex-daytona-116508.usdz",
     arEnabled: true,
     posterImage: "/images/posters/rolex-daytona-116508-poster.webp",
+    rentalStartingPriceEur: 490,
   },
   {
     slug: "ap-royal-oak-15500st",
@@ -83,6 +89,7 @@ export const watchCatalog: WatchAssets[] = [
     arModelUsdz: "/models/ap-royal-oak-15500st.usdz",
     arEnabled: true,
     posterImage: "/images/posters/ap-royal-oak-15500st-poster.webp",
+    rentalStartingPriceEur: 1890,
   },
   {
     slug: "ap-royal-oak-15202st",
@@ -94,6 +101,7 @@ export const watchCatalog: WatchAssets[] = [
     arModelUsdz: "/models/ap-royal-oak-15202st.usdz",
     arEnabled: true,
     posterImage: "/images/posters/ap-royal-oak-15202st-poster.webp",
+    rentalStartingPriceEur: 1890,
   },
   {
     slug: "ap-royal-oak-15510st",
@@ -105,6 +113,7 @@ export const watchCatalog: WatchAssets[] = [
     arModelUsdz: "/models/ap-royal-oak-15510st.usdz",
     arEnabled: true,
     posterImage: "/images/posters/ap-royal-oak-15510st-poster.webp",
+    rentalStartingPriceEur: 1890,
   },
 ];
 
