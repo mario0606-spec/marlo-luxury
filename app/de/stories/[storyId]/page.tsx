@@ -122,16 +122,23 @@ function ContentBlock({
     }
     case "watch_cta_generic":
       return (
-        <div className="my-8 border border-marlo-gold/30 rounded-lg bg-white p-5 md:p-6 flex items-center justify-between gap-4">
-          <p className="text-sm text-marlo-dark/70">
-            Luxusuhren tageweise mieten — persönlich übergeben, rundum versichert.
-          </p>
-          <Link
-            href="/de/bundles"
-            className="shrink-0 inline-block bg-marlo-dark text-white px-5 py-2.5 rounded hover:bg-marlo-gold transition-colors text-sm font-medium"
-          >
-            Uhren entdecken
-          </Link>
+        <div className="my-8 border border-marlo-gold/30 rounded-lg bg-white p-5 md:p-6">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+            <div className="flex-1 min-w-0">
+              <p className="text-xs uppercase tracking-widest text-marlo-gold mb-1">
+                Diese Uhr mieten
+              </p>
+              <p className="text-sm text-marlo-dark/70">
+                Persönlich übergeben, rundum versichert, Concierge inklusive.
+              </p>
+            </div>
+            <Link
+              href="/de/bundles"
+              className="shrink-0 inline-block bg-marlo-dark text-white px-6 py-3 rounded hover:bg-marlo-gold transition-colors text-sm font-medium text-center"
+            >
+              Alle Bundles ansehen
+            </Link>
+          </div>
         </div>
       );
     case "image":
@@ -256,7 +263,7 @@ export default function StoryPage({
   const primaryBundle = story.bundleSlugs[0]
     ? bundleMap.get(story.bundleSlugs[0])
     : undefined;
-  const relatedStories = getRelatedStories(story.id, 3, story.relatedSlugs);
+  const relatedStories = getRelatedStories(story.id, 3);
   const bundleInsertIndex = Math.floor(story.contentBlocks.length / 2);
 
   return (

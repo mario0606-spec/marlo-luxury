@@ -13,11 +13,24 @@ const nextConfig = {
       "kunst-kultur-vernissage",
       "vatertag",
     ];
-    return lookbookSlugs.map((slug) => ({
-      source: `/stories/${slug}`,
-      destination: `/de/stories/${slug}`,
+    const bundleRedirects = [
+      "/de/bundles/jubilaeum-30-tage-ap",
+      "/de/bundles/jubilaeum-30-tage-ap/buchen",
+      "/de/bundles/jubilaeum-30-tage-ap/bestaetigung",
+    ].map((source) => ({
+      source,
+      destination: source.replace("jubilaeum-30-tage-ap", "jubilaeum-audemars-piguet"),
       permanent: true,
     }));
+
+    return [
+      ...lookbookSlugs.map((slug) => ({
+        source: `/stories/${slug}`,
+        destination: `/de/stories/${slug}`,
+        permanent: true,
+      })),
+      ...bundleRedirects,
+    ];
   },
 };
 export default nextConfig;
