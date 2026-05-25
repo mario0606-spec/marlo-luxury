@@ -16,7 +16,7 @@ export const occasionBundles: OccasionBundle[] = [
     ],
     priceEur: 890,
     availabilityWindow: null,
-    editorialAnchorStoryId: "hochzeit-uhr-guide",
+    editorialAnchorStoryId: "die-hochzeit",
     heroDescription:
       "Ihre Hochzeit verdient einen Zeitmesser, der diesem Moment gerecht wird. Sieben Tage lang tragen Sie eine Patek Philippe Calatrava — persönlich übergeben, rundum versichert, mit Concierge an Ihrer Seite.",
   },
@@ -35,7 +35,7 @@ export const occasionBundles: OccasionBundle[] = [
     ],
     priceEur: 490,
     availabilityWindow: null,
-    editorialAnchorStoryId: "gala-look-rolex",
+    editorialAnchorStoryId: "gala-charity-abend",
     optionalAddOns: [
       { name: "Smoking-Hemdmanschetten (Paar)", priceEur: 45 },
     ],
@@ -43,7 +43,7 @@ export const occasionBundles: OccasionBundle[] = [
       "Ein Wochenende, das in Erinnerung bleibt. Die Rolex Daytona am Handgelenk, weiße Handschuhe bei der Lieferung, Rücksendung am Montag — alles inklusive.",
   },
   {
-    bundleSlug: "jubilaeum-30-tage-ap",
+    bundleSlug: "jubilaeum-audemars-piguet",
     displayName: "Jubiläum 30 Tage Audemars Piguet",
     occasion: "Jubiläum",
     watchPool: ["ap-royal-oak-15500st", "ap-royal-oak-15202st", "ap-royal-oak-15510st"],
@@ -57,7 +57,7 @@ export const occasionBundles: OccasionBundle[] = [
     ],
     priceEur: 1890,
     availabilityWindow: null,
-    editorialAnchorStoryId: "jubilaeum-royal-oak",
+    editorialAnchorStoryId: "geburtstag",
     optionalAddOns: [
       { name: "Professionelle Foto-Session", priceEur: 250 },
     ],

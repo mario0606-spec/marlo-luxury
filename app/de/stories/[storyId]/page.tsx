@@ -21,8 +21,8 @@ export function generateMetadata({
   if (!story) return {};
   const path = `/de/stories/${story.id}`;
   return {
-    title: truncate(`${story.title} — Marlo`, 60),
-    description: truncate(story.excerpt, 155),
+    title: truncate(story.metaTitle ?? `${story.title} — Marlo`, 60),
+    description: truncate(story.metaDescription ?? story.excerpt, 155),
     alternates: hreflangAlternates(path),
   };
 }
@@ -120,6 +120,20 @@ function ContentBlock({
       if (!bundle) return null;
       return <InlineWatchCta bundle={bundle} />;
     }
+    case "watch_cta_generic":
+      return (
+        <div className="my-8 border border-marlo-gold/30 rounded-lg bg-white p-5 md:p-6 flex items-center justify-between gap-4">
+          <p className="text-sm text-marlo-dark/70">
+            Luxusuhren tageweise mieten — persönlich übergeben, rundum versichert.
+          </p>
+          <Link
+            href="/de/bundles"
+            className="shrink-0 inline-block bg-marlo-dark text-white px-5 py-2.5 rounded hover:bg-marlo-gold transition-colors text-sm font-medium"
+          >
+            Uhren entdecken
+          </Link>
+        </div>
+      );
     case "image":
       return (
         <figure className="my-8">
@@ -230,13 +244,19 @@ export default function StoryPage({
   const story = getStoryById(params.storyId);
   if (!story) notFound();
 
+  const ctaBundleSlugs = story.contentBlocks
+    .filter((b): b is { type: "watch_cta"; bundleSlug: string } => b.type === "watch_cta")
+    .map((b) => b.bundleSlug);
+  const allBundleSlugs = Array.from(new Set([...story.bundleSlugs, ...ctaBundleSlugs]));
   const bundleMap = new Map(
-    story.bundleSlugs
+    allBundleSlugs
       .map((slug) => [slug, getBundleBySlug(slug)] as const)
       .filter((entry): entry is [string, OccasionBundle] => !!entry[1]),
   );
-  const primaryBundle = bundleMap.values().next().value as OccasionBundle | undefined;
-  const relatedStories = getRelatedStories(story.id, 3);
+  const primaryBundle = story.bundleSlugs[0]
+    ? bundleMap.get(story.bundleSlugs[0])
+    : undefined;
+  const relatedStories = getRelatedStories(story.id, 3, story.relatedSlugs);
   const bundleInsertIndex = Math.floor(story.contentBlocks.length / 2);
 
   return (

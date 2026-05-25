@@ -4,7 +4,14 @@ export type Occasion =
   | "Jubiläum"
   | "Geburtstag"
   | "Geschäftsabschluss"
-  | "Festival";
+  | "Festival"
+  | "Business"
+  | "Silvester"
+  | "Reise"
+  | "Urlaub"
+  | "Date"
+  | "Kultur"
+  | "Geschenk";
 
 export interface AvailabilityWindow {
   from: string;
@@ -39,6 +46,7 @@ export type StoryContentBlock =
   | { type: "paragraph"; text: string }
   | { type: "heading"; text: string }
   | { type: "watch_cta"; bundleSlug: string }
+  | { type: "watch_cta_generic" }
   | { type: "image"; alt: string; caption?: string };
 
 export interface EditorialStory {
@@ -51,6 +59,9 @@ export interface EditorialStory {
   publishedAt: string;
   heroImageAlt: string;
   bundleSlugs: string[];
+  relatedSlugs?: string[];
+  metaTitle?: string;
+  metaDescription?: string;
   contentBlocks: StoryContentBlock[];
 }
 
